@@ -1,175 +1,48 @@
 {% extends "base.html" %}
     {% block content %}
+
+    <script src="{{ url_for('static', filename='scripts/room.js')}}"></script>
     <script>
-        const websockeAddress = "ws://127.0.0.1:4201";
+        //const websockeAddress = "ws://127.0.0.1:4201";
         const username = "{{user}}";
         const room_id = {{room_id}};
 
-        var websocket = new WebSocket(websockeAddress);
-
-        function setupWebsocketConnection()
-        {
-            websocket = new WebSocket(websockeAddress);
-            
-            console.log(websocket.readyState);
-            websocket.addEventListener("message", ({ data }) => {
-                console.log(data);
-                const event = JSON.parse(data);
-                //console.log(event["type"]);
-
-                if (event.type ==  "player_joined")
-                {
-                    console.log("Player Joined" + " with name" + event.username);
-                    addToChatBox("Player joined: " + event.username);
-                    
-                    //$("#chat-box").append("<p>Player joined: " + event.username+"</p>");
-
-                    //$("#players-list").append('<ul id="' + event.username+'">' + event.username + "</ul>");
-
-                }
-
-                if (event.type == "user_disconnect")
-                {
-                    // var useritem = ("#"+event.username);
-                    // console.log(useritem);
-                    // $(useritem).remove();
-                }
-
-                if (event.type == "game_update")
-                {
-
-                }
-
-                if (event.type == "room_update")
-                {
-                    let roomData = event.room_data
-                    $("#players-list").empty();
-                    console.log($("#players-list").children.length)
-    
-                    for (let i = 0; i < roomData.connected_users.length; i++)
-                    {
-                        $("#players-list").append('<ul>' + roomData.connected_users[i] + "</ul>");
-                    }
-                }
-
-                if (event.type == "chat_message")
-                {
-                    addToChatBox(event.username + ": " + event.message);
-                    //$("#chat-box").append("<p>" + event.username + ": " + event.message + "</p>");
-                }
-
-                // switch (event.type)
-                // {
-                //     case "player_joined":
-                //         console.log("Player Joined" + " with name" + event.username);
-                //         $("#chat-box").append("<p>Player joined: " + event.username+"</p>");
-                //         $("#players-list").append('<ul id="' + event.username+'">' + event.username + "</ul>");
-
-                //     case "user_disconnect":
-                //         var useritem = ("#"+event.username);
-                //         console.log(useritem);
-                //         $(useritem).remove();
-                //     case "game_update":
-                //         //$()
-                //         console.log("");
-                // }
-
-            // do something with event
-            });
-
-            //websocket.send(JSON.stringify({"type":"join", "room_id": room_id, "username": username}));
-        }
-        function updateGame()
-        {
-            //$()
-        }
-        
-        async function sendWebsocketMessage(message)
-        {
-            if (websocket.readyState == websocket.OPEN)
-            {
-                await sleep(1000 * .25);
-                websocket.send(JSON.stringify(message));
-            }
-            else if (websocket.readyState == websocket.CONNECTING)
-            {
-                await sleep(1000 * .25);
-                console.log(websocket.readyState);
-                await sendWebsocketMessage(message);
-                
-            }
-            else if (websocket.readyState == websocket.CLOSED)
-            {
-                await sleep(1000 * 0.25);
-                console.log(websocket.readyState);
-                setupWebsocketConnection();
-                await sendWebsocketMessage(message);
-            }
-        }
-
-
-        async function joinRoomWithUsername()
-        {
-            await sendWebsocketMessage({"type":"join", "room_id": room_id, "username": username});
-        }
-
-
-        async function sendChatMessage()
-        {
-            console.log("clicked");
-            let message = $("#message-input").val();
-            if (!message.empty)
-            {
-                console.log(message);
-                await sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
-
-                $("#message-input").val('');
-            }
-        }
-
-        function addToChatBox(message)
-        {
-            $("#chat-box").append("<p>" + message + "</p>");
-            $("#chat-box").scrollTop($("chat-box")[0].scrollHeight);
-        }
-        // async function joinRoomWithUsername()
-        // {
-        //     if (websocket.readyState == websocket.OPEN)
-        //     {
-        //         await sleep(1000 * .25);
-        //         websocket.send(JSON.stringify({"type":"join", "room_id": room_id, "username": username}));
-        //     }
-        //     else if (websocket.readyState == websocket.CONNECTING)
-        //     {
-        //         await sleep(1000 * .25);
-        //         console.log(websocket.readyState);
-        //         await joinRoomWithUsername();
-                
-        //     }
-        //     else if (websocket.readyState == websocket.CLOSED)
-        //     {
-        //         await sleep(1000 * 0.25);
-        //         console.log(websocket.readyState);
-        //         setupWebsocketConnection();
-        //         await joinRoomWithUsername();
-        //     }
-        // }
+        var notificationAudio = new Audio("{{ url_for('static', filename='sfx/notification.mp3')}}");
         setupWebsocketConnection();
         const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         joinRoomWithUsername();
     </script>
 
-    <h3>
-        Room: {{ room_id }}
-    </h3>
 
-    <li id="players-list">
-    </li>
+    <div class="container">
+        <div class="row">
+            <h3>
+                Room: {{ room_id }}
+            </h3>
+        </div>
 
-    <div id="chat-box" style="border:1px solid black;height:100px;width:35%;overflow-y:scroll;overflow-x:scroll;">
+        <div class="row">
+            <div class="col">
+                <div id="canvas-div">
+                    <canvas id="game-canvas" style="border:1px solid black;" height="600" width="800"></canvas>
+                </div>
+            </div>
 
+            <div class="col-4">
+                <div class="row">
+                    <div id="chat-box" style="border:1px solid black;height:250px;width:100%;overflow-y:scroll;overflow-x:scroll;">
+                    </div>
+                    <input type="input" id="message-input" placeholder="Chat..."></input>
+                    <button type="button" class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+                </div>
+                <br>
+                <div class="row">
+                    <ul id="players-list">
+                        Players:
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
-    <input id="message-input"></input>
-    <button onclick="sendChatMessage()">Send</button>
 
   {% endblock %}

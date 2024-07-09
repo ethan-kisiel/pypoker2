@@ -14,7 +14,7 @@ socket_thread = Thread(target=socket_server.run, args=(room_manager,))
 socket_thread.daemon = True
 socket_thread.start()
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="",static_folder="static")
 
 @app.route("/")
 def index():

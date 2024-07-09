@@ -1,135 +1,155 @@
 {% extends "base.html" %}
     {% block content %}
     <script>
-        const websockeAddress = "ws://127.0.0.1:4201";
+        // const websockeAddress = "ws://127.0.0.1:4201";
 
-        var websocket = new WebSocket(websockeAddress);
+        // var websocket = new WebSocket(websockeAddress);
 
-        function setupWebsocketConnection()
-        {
-            websocket = new WebSocket(websockeAddress);
+        // function setupWebsocketConnection()
+        // {
+        //     websocket = new WebSocket(websockeAddress);
             
 
-            websocket.addEventListener("message", ({ data }) => {
-                // console.log(data);
-                const event = JSON.parse(data);
-                switch (event.type)
-                {
-                    case "status_update":
-                        // console.log("server_status");
+        //     websocket.addEventListener("message", ({ data }) => {
+        //         // console.log(data);
+        //         const event = JSON.parse(data);
+        //         switch (event.type)
+        //         {
+        //             case "status_update":
+        //                 // console.log("server_status");
 
-                            if ( event.server_status == "busy")
-                            {
-                                document.getElementById("status-icon").setAttribute("fill", "yellow");
-                            }
-                            if ( event.server_status == "stopped")
-                            {
-                                document.getElementById("status-icon").setAttribute("fill", "red");
-                            }
-                            if (event.server_status == "running")
-                            {
-                                document.getElementById("status-icon").setAttribute("fill", "green");
-                            }
+        //                     if ( event.server_status == "busy")
+        //                     {
+        //                         document.getElementById("status-icon").setAttribute("fill", "yellow");
+        //                     }
+        //                     if ( event.server_status == "stopped")
+        //                     {
+        //                         document.getElementById("status-icon").setAttribute("fill", "red");
+        //                     }
+        //                     if (event.server_status == "running")
+        //                     {
+        //                         document.getElementById("status-icon").setAttribute("fill", "green");
+        //                     }
 
 
-                            if (previous_status == "")
-                            {
-                                previous_status = event.server_status;
-                            }
-                            if (previous_status != event.server_status)
-                            {
-                                previous_status = event.server_status;
-                                window.location.reload();
-                            }
-                            previous_status = event.server_status;
+        //                     if (previous_status == "")
+        //                     {
+        //                         previous_status = event.server_status;
+        //                     }
+        //                     if (previous_status != event.server_status)
+        //                     {
+        //                         previous_status = event.server_status;
+        //                         window.location.reload();
+        //                     }
+        //                     previous_status = event.server_status;
 
-                            if (JSON.stringify(connected_players) !== JSON.stringify(event.connected_players))
-                            {
-                                // console.log("SERVER CONNECTED PLAYERS: ");
-                                // console.log(event.connected_players);
-                                // console.log(typeof(event.connected_players));
-                                // console.log("LOCAL CONNECTED PLAYERS: ");
-                                // console.log(connected_players);
-                                // console.log(typeof(connected_players));
-                                window.location.reload();
-                            }
-                }
+        //                     if (JSON.stringify(connected_players) !== JSON.stringify(event.connected_players))
+        //                     {
+        //                         // console.log("SERVER CONNECTED PLAYERS: ");
+        //                         // console.log(event.connected_players);
+        //                         // console.log(typeof(event.connected_players));
+        //                         // console.log("LOCAL CONNECTED PLAYERS: ");
+        //                         // console.log(connected_players);
+        //                         // console.log(typeof(connected_players));
+        //                         window.location.reload();
+        //                     }
+        //         }
 
-            // do something with event
-            });
-        }
+        //     // do something with event
+        //     });
+        // }
 
-        setupWebsocketConnection();
-        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+        // setupWebsocketConnection();
+        // const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         
-        async function fetchConnectedPlayers() {
-            // UPDATE CONNECTED PLAYERS
-            let players_status = await fetch(window.location.origin + "/connected-players");
-            // console.log(window.location.origin + "/connected-players");
-            if (players_status.ok)
-            {
-                let json = await players_status.json();
-                //console.log(json);
-                connected_players = json.connected_players
-            }
-            // UPDATED CONNECTED PLAYERS
+        // async function fetchConnectedPlayers() {
+        //     // UPDATE CONNECTED PLAYERS
+        //     let players_status = await fetch(window.location.origin + "/connected-players");
+        //     // console.log(window.location.origin + "/connected-players");
+        //     if (players_status.ok)
+        //     {
+        //         let json = await players_status.json();
+        //         //console.log(json);
+        //         connected_players = json.connected_players
+        //     }
+        //     // UPDATED CONNECTED PLAYERS
 
+        // }
+        // async function updateServerStatus() {
+        //     console.log("Updating things");
+
+        //     await sleep(1000 * 0.25);
+        //     if (websocket.readyState == websocket.CLOSED)
+        //     {
+        //         setupWebsocketConnection();
+        //         await updateServerStatus();
+        //         //window.location.reload();
+        //     }
+        //     if (websocket.readyState == websocket.CONNECTING)
+        //     {
+        //        await updateServerStatus();
+        //     }
+        //     else
+        //     {
+        //         try
+        //         {
+        //             await websocket.send(JSON.stringify({"type": "join", "room_id": 1, "username":"Test User"}));
+        //             console.log("SENT MESSAGE")
+        //         }
+        //         catch (err)
+        //         {request
+        //             console.log(err);
+        //         }
+
+        //       //  await updateServerStatus();
+        //     }
+
+        //     //let status = await fetch(window.location.origin + "/server-status");
+        //     // console.log(window.location.origin + "/server-status");
+        //     // if (status.ok)
+        //     // {
+        //     //     let json = await status.json();
+        //     //     console.log(json);
+        //     //     if (json.status == "pending")
+        //     //     {
+        //     //         await sleep(2000);
+        //     //         await websocket.send("update");
+        //     //         await updateServerStatus();
+        //     //     }
+        //     // }
+        // }
+        // //fetchConnectedPlayers();
+        // updateServerStatus();
+
+        function goToRoom(room_id)
+        {
+            
+            let username = $("#username-box").val()
+            let newLocation = "/room/" + room_id +"/" +$("#username-box").val();
+            window.location.replace(newLocation);
+            console.log(username);
         }
-        async function updateServerStatus() {
-            console.log("Updating things");
-
-            await sleep(1000 * 0.25);
-            if (websocket.readyState == websocket.CLOSED)
-            {
-                setupWebsocketConnection();
-                await updateServerStatus();
-                //window.location.reload();
-            }
-            if (websocket.readyState == websocket.CONNECTING)
-            {
-               await updateServerStatus();
-            }
-            else
-            {
-                try
-                {
-                    await websocket.send(JSON.stringify({"type": "join", "room_id": 1, "username":"Test User"}));
-                    console.log("SENT MESSAGE")
-                }
-                catch (err)
-                {request
-                    console.log(err);
-                }
-
-              //  await updateServerStatus();
-            }
-
-            //let status = await fetch(window.location.origin + "/server-status");
-            // console.log(window.location.origin + "/server-status");
-            // if (status.ok)
-            // {
-            //     let json = await status.json();
-            //     console.log(json);
-            //     if (json.status == "pending")
-            //     {
-            //         await sleep(2000);
-            //         await websocket.send("update");
-            //         await updateServerStatus();
-            //     }
-            // }
-        }
-        //fetchConnectedPlayers();
-        updateServerStatus();
     </script>
 
     <h1>
         Rooms:
     </h1>
-    {% for room in rooms %}
-    <a href="/room/{{ room }}/test">{{ room }}</p>
-    {% endfor %}
-    
-    <input id="username-box">enter username</input>
 
+    <div class="container">
+        {% for room in rooms %}
+        <div class="row">
+            <a onclick="goToRoom('{{room}}')">{{ room }}</a>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <br>
+    <br>
+    <div>
+    <input id="username-box" placeholder="Enter Username"></input>
+    </div>
+    <div>
     <a href="/create-room"> create room</a>
+    </div>
   {% endblock %}
