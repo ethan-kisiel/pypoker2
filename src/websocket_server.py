@@ -64,9 +64,8 @@ class SocketServer:
             except ConnectionClosedOK:
                 await self.room_manager.kick_user(websocket)
 
-                message = {"type": "room_update", 
-                    "room_data": self.room_manager.rooms[room_id].to_dict()}
-                await self.room_manager.broadcast_message(room_id, message)
+               
+                #await self.room_manager.broadcast_message(room_id, message)
                 break
 
             except Exception as e:

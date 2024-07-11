@@ -55,7 +55,10 @@ class RoomManager:
                 if user.get_socket() == websocket:
                     print("REMOVING USER")
                     room.remove_user_connection(user.username)
-                    message = {"type": "user_disconnect", "username": user.username}
+
+                    message = {"type": "room_update", 
+                    "room_data": self.rooms[room.room_id].to_dict()}
+                    #message = {"type": "user_disconnect", "username": user.username}
                     await self.broadcast_message(room.room_id, message)
 
     def get_rooms(self):

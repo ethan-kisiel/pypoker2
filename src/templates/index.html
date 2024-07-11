@@ -124,10 +124,30 @@
         function goToRoom(room_id)
         {
             
-            let username = $("#username-box").val()
-            let newLocation = "/room/" + room_id +"/" +$("#username-box").val();
-            window.location.replace(newLocation);
-            console.log(username);
+            let username = $("#username-box").val();
+
+            if (!username.empty)
+            {
+                let newLocation = "/room/" + room_id +"/" +$("#username-box").val();
+                window.location.replace(newLocation);
+                console.log(username);
+            }
+        }
+
+        function areRoomsDisabled()
+        {
+            
+            let username = $("#username-box").val();
+            console.log("#######");
+            if (username.empty)
+            {
+                $(".btn btn-primary join-button").prop("disabled",true);
+            }
+            else
+            {
+                console.log("TEST");
+                $(".btn btn-primary join-button").prop("disabled",false);
+            }
         }
     </script>
 
@@ -138,7 +158,12 @@
     <div class="container">
         {% for room in rooms %}
         <div class="row">
-            <a onclick="goToRoom('{{room}}')">{{ room }}</a>
+            <div class="col-4">
+                <p>{{ room }}</p>
+            </div>
+            <div class="col-2">
+                <button disabled="true" onclick="goToRoom('{{room}}')" type="button" class="btn btn-primary join-button">Join</button>
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -147,7 +172,7 @@
     <br>
     <br>
     <div>
-    <input id="username-box" placeholder="Enter Username"></input>
+    <input onkeyup="areRoomsDisabled()" id="username-box" placeholder="Enter Username"></input>
     </div>
     <div>
     <a href="/create-room"> create room</a>

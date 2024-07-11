@@ -1,7 +1,51 @@
-const websockeAddress = "ws://127.0.0.1:4201";
+//import { WebsocketManager } from "./websocket_manager.js";
+
+
+//const websockeAddress = "ws://10.1.73.49:4201";
+//var websocket = new WebSocket(websockeAddress);
+
 // var websocket = new WebSocket(websockeAddress);
 
-var websocket = new WebSocket(websockeAddress);
+// class WebsocketManager
+// {
+//     function
+// }
+
+
+// let websocketManager = new WebsocketManager("10.1.73.49", "4201", addToChatBox);
+
+
+// async function joinRoomWithUsername()
+// {
+//     await websocketManager.sendWebsocketMessage({"type":"join", "room_id": room_id, "username": username});
+// }
+
+// async function sendChatMessage()
+// {
+//     console.log("clicked");
+//     let message = $("#message-input").val();
+//     if (!message.empty)
+//     {
+//         console.log(message);
+//         await websocketManager.sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
+
+//         $("#message-input").val('');
+//     }
+// }
+
+// function addToChatBox(message)
+// {
+//     $("#chat-box").append("<p>" + message + "</p>");
+//     let bottomElement = $("chat-box").children[-1];
+    
+//     notificationAudio.play();
+//     $("#chat-box").animate({scrollTop: 50000}, 500);
+//     //$("#chat-box").scrollTop($("chat-box")[0].scrollHeight - $("chat-box")[0].clientHeight);
+//     //$("#chat-box").scroll()
+// }
+
+
+
 
 function setupWebsocketConnection()
 {
@@ -104,61 +148,61 @@ async function sendWebsocketMessage(message)
 }
 
 
-async function joinRoomWithUsername()
-{
-    await sendWebsocketMessage({"type":"join", "room_id": room_id, "username": username});
-}
+// async function joinRoomWithUsername()
+// {
+//     await sendWebsocketMessage({"type":"join", "room_id": room_id, "username": username});
+// }
 
 
-async function sendChatMessage()
-{
-    console.log("clicked");
-    let message = $("#message-input").val();
-    if (!message.empty)
-    {
-        console.log(message);
-        await sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
+// async function sendChatMessage()
+// {
+//     console.log("clicked");
+//     let message = $("#message-input").val();
+//     if (!message.empty)
+//     {
+//         console.log(message);
+//         await sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
 
-        $("#message-input").val('');
-    }
-}
+//         $("#message-input").val('');
+//     }
+// }
 
-function addToChatBox(message)
-{
-    $("#chat-box").append("<p>" + message + "</p>");
-    let bottomElement = $("chat-box").children[-1];
+// function addToChatBox(message)
+// {
+//     $("#chat-box").append("<p>" + message + "</p>");
+//     let bottomElement = $("chat-box").children[-1];
     
-    notificationAudio.play();
-    $("#chat-box").animate({scrollTop: 50000}, 500);
-    //$("#chat-box").scrollTop($("chat-box")[0].scrollHeight - $("chat-box")[0].clientHeight);
-    //$("#chat-box").scroll()
-}
+//     notificationAudio.play();
+//     $("#chat-box").animate({scrollTop: 50000}, 500);
+//     //$("#chat-box").scrollTop($("chat-box")[0].scrollHeight - $("chat-box")[0].clientHeight);
+//     //$("#chat-box").scroll()
+// }
 
 
-// const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
-// // async function joinRoomWithUsername()
-// // {
-// //     if (websocket.readyState == websocket.OPEN)
-// //     {
-// //         await sleep(1000 * .25);
-// //         websocket.send(JSON.stringify({"type":"join", "room_id": room_id, "username": username}));
-// //     }
-// //     else if (websocket.readyState == websocket.CONNECTING)
-// //     {
-// //         await sleep(1000 * .25);
-// //         console.log(websocket.readyState);
-// //         await joinRoomWithUsername();
+// async function joinRoomWithUsername()
+// {
+//     if (websocket.readyState == websocket.OPEN)
+//     {
+//         await sleep(1000 * .25);
+//         websocket.send(JSON.stringify({"type":"join", "room_id": room_id, "username": username}));
+//     }
+//     else if (websocket.readyState == websocket.CONNECTING)
+//     {
+//         await sleep(1000 * .25);
+//         console.log(websocket.readyState);
+//         await joinRoomWithUsername();
         
-// //     }
-// //     else if (websocket.readyState == websocket.CLOSED)
-// //     {
-// //         await sleep(1000 * 0.25);
-// //         console.log(websocket.readyState);
-// //         setupWebsocketConnection();
-// //         await joinRoomWithUsername();
-// //     }
-// // }
+//     }
+//     else if (websocket.readyState == websocket.CLOSED)
+//     {
+//         await sleep(1000 * 0.25);
+//         console.log(websocket.readyState);
+//         setupWebsocketConnection();
+//         await joinRoomWithUsername();
+//     }
+// }
 
 
-// //$("#game-canvas")
+//$("#game-canvas")

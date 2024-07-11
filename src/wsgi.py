@@ -4,7 +4,7 @@ from websocket_server import SocketServer
 
 from managers.room_manager import RoomManager
 
-socket_server = SocketServer("127.0.0.1", 4201)
+socket_server = SocketServer("10.1.73.49", 4201)
 
 
 room_manager = RoomManager()
@@ -13,6 +13,7 @@ room_manager = RoomManager()
 socket_thread = Thread(target=socket_server.run, args=(room_manager,))
 socket_thread.daemon = True
 socket_thread.start()
+
 
 app = Flask(__name__, static_url_path="",static_folder="static")
 

@@ -1,16 +1,55 @@
 {% extends "base.html" %}
     {% block content %}
+    
+    <script src="{{ url_for('static', filename='scripts/websocket_manager.js')}}">
+    </script>
 
-    <script src="{{ url_for('static', filename='scripts/room.js')}}"></script>
     <script>
         //const websockeAddress = "ws://127.0.0.1:4201";
         const username = "{{user}}";
         const room_id = {{room_id}};
 
         var notificationAudio = new Audio("{{ url_for('static', filename='sfx/notification.mp3')}}");
-        setupWebsocketConnection();
-        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
-        joinRoomWithUsername();
+
+
+        function addToChatBox(message)
+        {
+            $("#chat-box").append("<p>" + message + "</p>");
+            let bottomElement = $("chat-box").children[-1];
+            
+            notificationAudio.play();
+            $("#chat-box").animate({scrollTop: 50000}, 500);
+            //$("#chat-box").scrollTop($("chat-box")[0].scrollHeight - $("chat-box")[0].clientHeight);
+            //$("#chat-box").scroll()
+        }
+
+        function updatePlayers(roomData)
+        {
+            $("#players-list").empty();
+            console.log($("#players-list").children.length)
+
+            for (let i = 0; i < roomData.connected_users.length; i++)
+            {
+                $("#players-list").append('<li>' + roomData.connected_users[i] + "</li>");
+            }
+        }
+
+        let websocketManager = new WebsocketManager("10.1.73.49", "4201", addToChatBox, updatePlayers);
+
+        async function sendChatMessage()
+        {
+            console.log("clicked");
+            let message = $("#message-input").val();
+            if (!message.empty)
+            {
+                console.log(message);
+                await websocketManager.sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
+
+                $("#message-input").val('');
+            }
+        }    
+    
+        websocketManager.joinRoomWithUsername();
     </script>
 
 
@@ -37,8 +76,8 @@
                 </div>
                 <br>
                 <div class="row">
+                    Connected users:
                     <ul id="players-list">
-                        Players:
                     </ul>
                 </div>
             </div>
