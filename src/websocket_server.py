@@ -53,9 +53,25 @@ class SocketServer:
                     data = {"type": "chat_message", "username": username, "message": message}
 
                     await self.room_manager.broadcast_message(room_id, message=data)
+                
+                if data["type"] == "request_seat":
+                    print("Player Requested Seat")
+                    room_id = data["room_id"]
+                    username = data["username"]
+                    
+                    # try:
+                    self.room_manager.rooms[room_id].request_seat(username)
+                    room = self.room_manager.rooms[room_id]
 
+                    data = {"type": "game_update", "table": room.table_dict()}
+                    print(self.room_manager.rooms[room_id])
+
+                    await self.room_manager.broadcast_message(room_id, message=data)
+                    # except Exception as e:
+                    #     print(e)
                 else:
                     print(data)
+
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)
                 # message = {"type": "room_update", 

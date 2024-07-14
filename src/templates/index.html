@@ -141,12 +141,12 @@
             console.log("#######");
             if (username.empty)
             {
-                $(".btn btn-primary join-button").prop("disabled",true);
+                $("button").prop("disabled",true);
             }
             else
             {
                 console.log("TEST");
-                $(".btn btn-primary join-button").prop("disabled",false);
+                $("button").prop("disabled",false);
             }
         }
     </script>
@@ -158,11 +158,11 @@
     <div class="container">
         {% for room in rooms %}
         <div class="row">
-            <div class="col-4">
-                <p>{{ room }}</p>
+            <div class="col">
+                <p>{{ room.room_id }}    |    {{ room.capacity }}</p>
             </div>
             <div class="col-2">
-                <button disabled="true" onclick="goToRoom('{{room}}')" type="button" class="btn btn-primary join-button">Join</button>
+                <button disabled="true" onclick="goToRoom('{{room.room_id}}')" type="button" class="btn btn-primary">Join</button>
             </div>
         </div>
         {% endfor %}

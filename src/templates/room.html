@@ -4,6 +4,95 @@
     <script src="{{ url_for('static', filename='scripts/websocket_manager.js')}}">
     </script>
 
+
+    <script src="{{ url_for('static', filename='scripts/constants.js')}}">
+    </script>
+
+
+    <script src="https://pixijs.download/release/pixi.js"></script>
+
+
+    <script type="module">
+
+ 
+        const app = new PIXI.Application();
+
+        await app.init({ width: 800, height: 600,
+            view: document.getElementById("game-canvas"),
+            backgroundColor: "#858163",
+        });
+        //app.setCanvas(document.getElementById("game-canvas"));
+        //document.body.appendChild(app.canvas);
+
+        await PIXI.Assets.load("{{url_for('static', filename='images/table.png')}}");
+        let sprite = PIXI.Sprite.from("{{url_for('static', filename='images/table.png')}}");
+        app.stage.addChild(sprite);
+
+        await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/diamonds.png')}}")
+        let cardSprite = PIXI.Sprite.from("{{ url_for('static', filename='images/Cards/diamonds.png')}}");
+        
+        
+    const atlasData = {
+        frames: {
+            card1: {
+                frame: { x: 0, y:0, w:88, h:124 },
+            },
+
+        },
+        meta: {
+            image: "{{ url_for('static', filename='images/Cards/diamonds.png')}}",
+            format: 'RGBA8888',
+            size: { w: 352, h: 372 },
+            scale: 2
+        },
+        animations: {
+            enemy: ['card1'] //array of frames by name
+        }
+    }
+
+    const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(atlasData.meta.image), atlasData);
+    console.log(atlasData);
+    //const handSpritesheet = new PIXI.Spritesheet(PIXI.Texture.from(handAtlasData.meta.image), handAtlasData);
+
+    await spritesheet.parse();
+    //await handSpritesheet.parse();
+
+    //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);
+
+    const card1 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+    const card2 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+    const card3 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+    const card4 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+    const card5 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+
+    const baseBoardOffset = 275;
+
+    //handCard1.y = 400;
+    
+
+    card1.x = baseBoardOffset;
+    card1.y = 250;
+
+    card2.y = 250;
+    card3.y = 250;
+    card4.y = 250;
+    card5.y = 250;
+
+    card2.x = baseBoardOffset + 50;
+    card3.x = baseBoardOffset + (50 *2);
+    card4.x = baseBoardOffset + (50 *3);
+    card5.x = baseBoardOffset + (50 *4);
+
+
+    app.stage.addChild(card1, card2, card3, card4, card5);
+
+
+
+
+
+    </script>
+
+
     <script>
         //const websockeAddress = "ws://127.0.0.1:4201";
         const username = "{{user}}";
@@ -34,7 +123,7 @@
             }
         }
 
-        let websocketManager = new WebsocketManager("10.1.73.49", "4201", addToChatBox, updatePlayers);
+        let websocketManager = new WebsocketManager("10.1.76.8", "4201", addToChatBox, updatePlayers);
 
         async function sendChatMessage()
         {
@@ -50,6 +139,8 @@
         }    
     
         websocketManager.joinRoomWithUsername();
+
+
     </script>
 
 
@@ -63,7 +154,11 @@
         <div class="row">
             <div class="col">
                 <div id="canvas-div">
-                    <canvas id="game-canvas" style="border:1px solid black;" height="600" width="800"></canvas>
+                    <canvas id="game-canvas" style="border:1px solid black;" height="450" width="800"></canvas>
+                    <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
+                    <button id="bet-button" class="btn btn-primary">Bet</button>
+                    <button id="check" class="btn btn-primary">Check</button>
+                    <button id="fold" class="btn btn-primary">Fold</button>
                 </div>
             </div>
 
@@ -84,4 +179,18 @@
         </div>
     </div>
 
+    <div style="display:none;">
+        <img id="table-image" src="{{ url_for('static', filename='images/poker-table.jpg') }}" width="800" height="600" />
+    </div>
+
+    
+
+    <script>
+       
+        // const canvas = document.getElementById("game-canvas");
+        // const ctx = canvas.getContext("2d");
+
+        // var game = new Game("{{ url_for('static', filename='') }}", canvas);
+        // game.drawTable(ctx);
+    </script>
   {% endblock %}

@@ -4,7 +4,7 @@ from websocket_server import SocketServer
 
 from managers.room_manager import RoomManager
 
-socket_server = SocketServer("10.1.73.49", 4201)
+socket_server = SocketServer("10.1.76.8", 4201)
 
 
 room_manager = RoomManager()

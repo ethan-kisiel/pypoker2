@@ -5,6 +5,8 @@ from constants import DEFAULT_TABLE_SEATS
 
 from utils.sockets_util import gen_gameid
 from .game_objects import Card
+from .game_objects import Board
+from .game_objects import Deck
 # from game_objects import Board
 # from game_objects import Deck
 
@@ -16,16 +18,17 @@ from .game_objects import Card
 
 class Player:
     chips: int
-    __hand: list[Card]
+    hand: list[Card]
 
     is_folded: bool
     is_hand_shown: bool
 
     def __init__(self, chips: int, user = None):
-        self.__chips = chips
+        self.chips = chips
         self.is_hand_shown = False
         self.is_folded = True
         self.user = user
+        self.hand = [None, None]
 
 
     def chip_bet(self, amount: int) -> int:
@@ -36,13 +39,28 @@ class Player:
         self.chips -= amount
 
         return amount
-    
 
     def recieve_hand(self, hand: list[Card]):
         self.__hand = hand
 
     def recieve_chips(self, chips: int):
         self.chips += chips
+
+    def as_dict(self, requesting_user=None):
+        player_dict = dict()
+        player_dict["chips"] = self.chips
+        player_dict["is_folded"] = self.is_folded 
+        player_dict["user"] = self.user.username if self.user is not None else None
+        if (self.user is None
+            or self.user.username == requesting_user
+            or self.is_hand_shown):
+            player_dict["hand"] = self.__hand
+        else:
+            player_dict["hand"] = ["x", "x"]
+
+        return player_dict
+
+
 
 
 class User:
@@ -51,6 +69,7 @@ class User:
     which are specific to the Room object, which is 
     specific to the websocket connection
     """
+
     __socket_connection: websocket
 
     username: str
@@ -78,7 +97,7 @@ class Seat:
     button: None
 
     def __init__(self):
-        pass
+        self.player = None
 
     def eject_player(self):
         self.player = None
@@ -86,10 +105,27 @@ class Seat:
     def seat_player(self, player: Player):
         self.player = player
 
+    def as_dict(self, requesting_user = None):
+        seat_dict = dict()
+        seat_dict["player"] = self.player.as_dict(requesting_user) if self.player is not None else None
+        return seat_dict
+    
+    
+    def __str__(self):
+        return f"Seated user: {self.player.user.username if self.player is not None else None}"
+    
+    def __repr__(self):
+        return f"Seated user: {self.player.user.username if self.player is not None else None}"
+
 
 class Table:
     max_seats: int
+    board: Board
+
+
+    __deck: Deck
     __seats: list[Seat]
+    __current_turn: int
 
     def __init__(self, max_seats: int):
         self.max_seats = max_seats
@@ -99,11 +135,60 @@ class Table:
             self.__seats.append(Seat())
 
     def seat_user(self, seat_index: int, user: User):
-        player = Player(DEFAULT_CHIPS, user)
-        user.player = player
-        player.user = user
+        if self.get_user_seat(user.username) is not None:
+            return
 
-        self.__seats[seat_index].seat_player(player)
+        if self.__seats[seat_index].player is not None:
+            # player object is seated at the table
+
+            if self.__seats[seat_index].player.user is None:
+                pass
+            pass
+
+        else:
+            # player object
+            player = Player(DEFAULT_CHIPS, user)
+            user.player = player
+            player.user = user
+
+            self.__seats[seat_index].seat_player(player)
+
+    
+    def deal_hands():
+        pass
+
+    def progress_phase():
+        pass
+
+    def as_dict():
+        pass
+
+    def find_empty_seat(self):
+        for i, seat in enumerate(self.__seats):
+            if seat.player is None:
+                return i, seat
+
+    def get_user_seat(self, username: str):
+        for seat in self.__seats:
+            if seat.player.user.username == username:
+                return seat
+
+    def game_update(self, username: str):
+        # gets game data based on the given user_id's permissions
+        pass
+
+    def as_dict(self, user = None):
+        table_dict = dict()
+
+        user_seat =  self.get_user_seat(user.username)
+        if user_seat is not None:
+            table_dict["player_hand"] = user_seat.player.hand
+        table_dict["seats"] = [seat.as_dict(user) for seat in self.__seats]
+        return table_dict
+
+    def __str__(self):
+        return f"Seats: {[seat for seat in self.__seats]}"
+
 
 
 class Room:
@@ -124,6 +209,7 @@ class Room:
         self.__users = dict()
 
         self.__table = Table(DEFAULT_TABLE_SEATS)
+        self.max_capacity = 10
 
     def add_user(self, username, websocket, is_spectator=True):
 
@@ -144,10 +230,11 @@ class Room:
             print(self.__users)
             return True
 
-    def seat_user(self, username: str, seat_index: int) -> bool:
+    def request_seat(self, username: str) -> bool:
         user = self.__users.get(username)
         if user is not None:
-            return self.__table.seat_user(seat_index, user)
+            i, seat = self.__table.find_empty_seat()
+            return self.__table.seat_user(i, user)
         else:
             return False
 
@@ -167,6 +254,17 @@ class Room:
         connected_users = [user.username for user in self.get_users()]
         dict_data = {"room_id": self.room_id, "connected_users": connected_users}
         return dict_data
+    
+    @property
+    def capacity(self):
+        return f"{len(self.get_users())}/{self.max_capacity}"
+
+    @property
+    def table_dict(self):
+        return self.__table.as_dict
 
     def __str__(self) -> str:
-        return f"Room: {self.room_id}, Users: {self.__users}"
+        return f"Room: {self.room_id}, Users: {self.__users}, Table: {self.__table}"
+
+    def print_room(self, room_id):
+        print(self.rooms[room_id])

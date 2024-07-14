@@ -62,7 +62,9 @@ class RoomManager:
                     await self.broadcast_message(room.room_id, message)
 
     def get_rooms(self):
-        return self.rooms.keys()
+        for room in self.rooms.values():
+            print(room.capacity)
+        return self.rooms.values()
 
     async def broadcast_message(self, room_id: int, message: dict):
         try:
@@ -78,5 +80,15 @@ class RoomManager:
             for user in room.get_users():
                 try:
                     await user.get_socket().send(s_message)
+                except Exception as e:
+                    print(f"Failed to broadcast messasge: {e}")
+
+    async def broadcast_game_update(self, room_id: int):
+        room = self.rooms.get(room_id)
+        if room is not None:
+            for user in room.get_users():
+                try:
+                    message = json.dumps(room.as_dict(user.username))
+                    await user.get_socket().send(message)
                 except Exception as e:
                     print(f"Failed to broadcast messasge: {e}")

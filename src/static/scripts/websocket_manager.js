@@ -39,7 +39,14 @@ class WebsocketManager
     
             if (event.type == "game_update")
             {
-    
+                console.log(event.table)
+                for (var i = 0; i < event.table.seats.length; i++)
+                {
+                    if (event.table.seats[i].player != null)
+                    {
+                        console.log(event.table.seats[i]);
+                    }
+                }
             }
     
             if (event.type == "room_update")
@@ -83,5 +90,10 @@ class WebsocketManager
     async joinRoomWithUsername()
     {
         await this.sendWebsocketMessage({"type":"join", "room_id": room_id, "username": username});
+    }
+
+    async requestSeat()
+    {
+        await this.sendWebsocketMessage({"type": "request_seat", "room_id": room_id, "username": username});
     }
 }
