@@ -41,23 +41,30 @@ class Player:
         return amount
 
     def recieve_hand(self, hand: list[Card]):
-        self.__hand = hand
+        self.hand = hand
 
     def recieve_chips(self, chips: int):
         self.chips += chips
 
     def as_dict(self, requesting_user=None):
         player_dict = dict()
-        player_dict["chips"] = self.chips
-        player_dict["is_folded"] = self.is_folded 
-        player_dict["user"] = self.user.username if self.user is not None else None
-        if (self.user is None
-            or self.user.username == requesting_user
-            or self.is_hand_shown):
-            player_dict["hand"] = self.__hand
-        else:
-            player_dict["hand"] = ["x", "x"]
 
+
+        try:
+            player_dict["chips"] = self.chips
+            player_dict["is_folded"] = self.is_folded 
+
+            player_dict["user"] = self.user.username if self.user is not None else None
+            
+            if (self.user is None
+                or self.user.username == requesting_user
+                or self.is_hand_shown):
+                player_dict["hand"] = self.hand
+            else:
+                player_dict["hand"] = ["x", "x"]
+        except Exception as e:
+            print(f"Error in player->as_dict: {e}")
+            
         return player_dict
 
 
@@ -107,7 +114,11 @@ class Seat:
 
     def as_dict(self, requesting_user = None):
         seat_dict = dict()
-        seat_dict["player"] = self.player.as_dict(requesting_user) if self.player is not None else None
+
+        try:
+            seat_dict["player"] = self.player.as_dict(requesting_user) if self.player is not None else None
+        except Exception as e:
+            print(f"Error in seat->as_dict: {e}")
         return seat_dict
     
     
@@ -170,8 +181,13 @@ class Table:
 
     def get_user_seat(self, username: str):
         for seat in self.__seats:
-            if seat.player.user.username == username:
-                return seat
+            if seat.player is None or seat.player.user is None:
+                continue
+            try:
+                if seat.player.user.username == username:
+                    return seat
+            except Exception as e:
+                print(f"Issue with getting user seat: {e}")
 
     def game_update(self, username: str):
         # gets game data based on the given user_id's permissions
@@ -179,11 +195,19 @@ class Table:
 
     def as_dict(self, user = None):
         table_dict = dict()
+        user_seat = None
+        try:
+            if user is not None:
+                user_seat =  self.get_user_seat(user)
 
-        user_seat =  self.get_user_seat(user.username)
-        if user_seat is not None:
-            table_dict["player_hand"] = user_seat.player.hand
-        table_dict["seats"] = [seat.as_dict(user) for seat in self.__seats]
+            if user_seat is not None:
+                table_dict["player_seat"] = user_seat.as_dict(user)
+            else:
+                table_dict["player_seat"] = None
+
+            table_dict["seats"] = [seat.as_dict() for seat in self.__seats]
+        except Exception as e:
+            print(f"Error in table->as_dict: {e}")
         return table_dict
 
     def __str__(self):
@@ -259,9 +283,8 @@ class Room:
     def capacity(self):
         return f"{len(self.get_users())}/{self.max_capacity}"
 
-    @property
-    def table_dict(self):
-        return self.__table.as_dict
+    def table_dict(self, user):
+        return self.__table.as_dict(user)
 
     def __str__(self) -> str:
         return f"Room: {self.room_id}, Users: {self.__users}, Table: {self.__table}"

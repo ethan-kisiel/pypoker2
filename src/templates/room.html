@@ -50,8 +50,9 @@
         }
     }
 
-    const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(atlasData.meta.image), atlasData);
-    console.log(atlasData);
+    console.log(heartsAtlasData);
+    const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(heartsAtlasData.meta.image), heartsAtlasData);
+    //console.log(atlasData);
     //const handSpritesheet = new PIXI.Spritesheet(PIXI.Texture.from(handAtlasData.meta.image), handAtlasData);
 
     await spritesheet.parse();
@@ -59,11 +60,19 @@
 
     //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);
 
-    const card1 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
-    const card2 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
-    const card3 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
-    const card4 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
-    const card5 = new PIXI.AnimatedSprite(spritesheet.animations.enemy);
+    const card1 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
+    const card2 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
+    const card3 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
+    const card4 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
+    const card5 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
+
+    card1.width = card1.width * 0.5;
+    
+    card2.currentFrame = 1;
+    card3.currentFrame = 2;
+    card4.currentFrame = 3;
+    card5.currentFrame = 4;
+
 
     const baseBoardOffset = 275;
 
@@ -123,7 +132,19 @@
             }
         }
 
-        let websocketManager = new WebsocketManager("10.1.76.8", "4201", addToChatBox, updatePlayers);
+        function gameUpdate(gameData)
+        {
+            if (gameData.player_seat != null)
+            {
+                $("#join-table").hide()
+            }
+            else
+            {
+                $("#join-table").show()
+            }
+        }
+
+        let websocketManager = new WebsocketManager("10.1.76.8", "4201", addToChatBox, updatePlayers, gameUpdate);
 
         async function sendChatMessage()
         {

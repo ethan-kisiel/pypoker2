@@ -63,10 +63,10 @@ class SocketServer:
                     self.room_manager.rooms[room_id].request_seat(username)
                     room = self.room_manager.rooms[room_id]
 
-                    data = {"type": "game_update", "table": room.table_dict()}
+                    #data = {"type": "game_update", "table": room.table_dict()}
                     print(self.room_manager.rooms[room_id])
 
-                    await self.room_manager.broadcast_message(room_id, message=data)
+                    await self.room_manager.broadcast_game_update(room_id)
                     # except Exception as e:
                     #     print(e)
                 else:

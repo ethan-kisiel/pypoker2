@@ -2,7 +2,7 @@ const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
 class WebsocketManager
 {
-    constructor (address, port, chatMessageCallback, updatePlayersCallback)
+    constructor (address, port, chatMessageCallback, updatePlayersCallback, gameUpdateCallback)
     {
         let fullAddress = "ws://" + address + ":" + port;
 
@@ -12,6 +12,7 @@ class WebsocketManager
 
         this.chatMessageCallback = chatMessageCallback;
         this.updatePlayersCallback = updatePlayersCallback;
+        this.gameUpdateCallback = gameUpdateCallback;
     }
 
     handleSocketComms(data)
@@ -39,6 +40,7 @@ class WebsocketManager
     
             if (event.type == "game_update")
             {
+                this.gameUpdateCallback(event.table);
                 console.log(event.table)
                 for (var i = 0; i < event.table.seats.length; i++)
                 {

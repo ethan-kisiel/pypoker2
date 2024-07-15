@@ -88,7 +88,10 @@ class RoomManager:
         if room is not None:
             for user in room.get_users():
                 try:
-                    message = json.dumps(room.as_dict(user.username))
+                    #table = room.as_dict(user.username)
+                    data = {"type": "game_update", "table": room.table_dict(user.username)}
+                    message = json.dumps(data)
+
                     await user.get_socket().send(message)
                 except Exception as e:
                     print(f"Failed to broadcast messasge: {e}")
