@@ -8,107 +8,229 @@
     <script src="{{ url_for('static', filename='scripts/constants.js')}}">
     </script>
 
+    <!-- <script type="module", src="{{ url_for('static', filename='scripts/game.js')}}"></script> -->
 
     <script src="https://pixijs.download/release/pixi.js"></script>
+    <script>
+        let app;
 
-
-    <script type="module">
-
- 
-        const app = new PIXI.Application();
-
-        await app.init({ width: 800, height: 600,
-            view: document.getElementById("game-canvas"),
-            backgroundColor: "#858163",
-        });
-        //app.setCanvas(document.getElementById("game-canvas"));
-        //document.body.appendChild(app.canvas);
-
-        await PIXI.Assets.load("{{url_for('static', filename='images/table.png')}}");
-        let sprite = PIXI.Sprite.from("{{url_for('static', filename='images/table.png')}}");
-        app.stage.addChild(sprite);
-
-        await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/diamonds.png')}}")
-        let cardSprite = PIXI.Sprite.from("{{ url_for('static', filename='images/Cards/diamonds.png')}}");
-        
-        
-    const atlasData = {
-        frames: {
-            card1: {
-                frame: { x: 0, y:0, w:88, h:124 },
-            },
-
-        },
-        meta: {
-            image: "{{ url_for('static', filename='images/Cards/diamonds.png')}}",
-            format: 'RGBA8888',
-            size: { w: 352, h: 372 },
-            scale: 2
-        },
-        animations: {
-            enemy: ['card1'] //array of frames by name
-        }
-    }
-
-    console.log(heartsAtlasData);
-    const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(heartsAtlasData.meta.image), heartsAtlasData);
-    //console.log(atlasData);
-    //const handSpritesheet = new PIXI.Spritesheet(PIXI.Texture.from(handAtlasData.meta.image), handAtlasData);
-
-    await spritesheet.parse();
-    //await handSpritesheet.parse();
-
-    //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);
-
-    const card1 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
-    const card2 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
-    const card3 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
-    const card4 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
-    const card5 = new PIXI.AnimatedSprite(spritesheet.animations.cards);
-
-    card1.width = card1.width * 0.5;
-    
-    card2.currentFrame = 1;
-    card3.currentFrame = 2;
-    card4.currentFrame = 3;
-    card5.currentFrame = 4;
-
-
-    const baseBoardOffset = 275;
-
-    //handCard1.y = 400;
-    
-
-    card1.x = baseBoardOffset;
-    card1.y = 250;
-
-    card2.y = 250;
-    card3.y = 250;
-    card4.y = 250;
-    card5.y = 250;
-
-    card2.x = baseBoardOffset + 50;
-    card3.x = baseBoardOffset + (50 *2);
-    card4.x = baseBoardOffset + (50 *3);
-    card5.x = baseBoardOffset + (50 *4);
-
-
-    app.stage.addChild(card1, card2, card3, card4, card5);
-
-
-
-
-
+        let spadesSS;
+        let clubsSS;
+        let diamondsSS;
+        let heartsSS;
     </script>
 
 
+    <div class="container">
+        <div class="row">
+            <h3>
+                Room: {{ room_id }}
+            </h3>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div id="canvas-div">
+                    <canvas id="game-canvas" style="border:1px solid black;" height="450" width="800"></canvas>
+                    <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
+                    <button id="bet-button" class="btn btn-primary">Bet</button>
+                    <button id="check" class="btn btn-primary" >Check</button>
+                    <button id="fold" class="btn btn-primary">Fold</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div id="chat-box" style="border:1px solid black;height:250px;width:100%;overflow-y:scroll;overflow-x:scroll;">
+                    </div>
+                    <input type="input" id="message-input" placeholder="Chat..."></input>
+                    <button type="button" class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col">
+                        Connected users:
+                        <ul id="players-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none;">
+        <img id="table-image" src="{{ url_for('static', filename='images/poker-table.jpg') }}" width="800" height="600" />
+    </div>
+
+
+
+
     <script>
+        $("#bet-button").hide();
+        $("#check").hide();
+        $("#fold").hide();
+
+        $("#message-input").on('keypress',function(e) {
+            if(e.which == 13) {
+                sendChatMessage();
+            }
+        });
+
+        app = new PIXI.Application();
+
+        app.init({ width: 800, height: 600,
+            view: document.getElementById("game-canvas"),
+            backgroundColor: "#858163",
+            antialias: true,
+        });
         //const websockeAddress = "ws://127.0.0.1:4201";
+
+        // console.log(2)
+        // console.log(app);
+
+
         const username = "{{user}}";
         const room_id = {{room_id}};
 
         var notificationAudio = new Audio("{{ url_for('static', filename='sfx/notification.mp3')}}");
 
+        function getAnimationForFace(face)
+        {
+            switch (face)
+            {
+                case "c":
+                    return clubsSS;
+                case "d":
+                    return diamondsSS;
+                case "h":
+                    return heartsSS;
+                case "s":
+                    return spadesSS;
+            }
+        }
+
+        function drawPlayerHand(hand)
+        {
+            let handOneData = hand[0];
+            let handTwoData = hand[1];
+
+            let handOneFace = getAnimationForFace(handOneData.face);
+            let handTwoFace  = getAnimationForFace(handTwoData.face);
+
+            let handOneVal = getFrameFromValue(handOneData.value);
+            let handTwoVal = getFrameFromValue(handTwoData.value);
+
+            if (handOneFace != null)
+            {
+                const hand1 = new PIXI.AnimatedSprite(handOneFace.animations.cards);
+                hand1.y = 424;
+                hand1.x = 312;
+
+                // const hand1 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
+                // const hand2 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
+
+
+                // hand1.y = 424;
+                // hand2.y = 424;
+
+                // hand1.x = 312;
+                // hand2.x = 312 +88;
+
+                hand1.currentFrame = handOneVal;
+                app.stage.addChild(hand1);
+            }
+
+
+            if (handTwoFace != null)
+            {
+                const hand2 = new PIXI.AnimatedSprite(handTwoFace.animations.cards);
+                hand2.y = 424;
+                hand2.x = 312 + 88;
+
+                hand2.currentFrame = handTwoVal;
+                app.stage.addChild(hand2);
+            }
+
+        }
+        function drawGameScreen()
+        {
+        for (var i = app.stage.children.length - 1; i >= 0; i--) {	app.stage.removeChild(app.stage.children[i]);};
+
+        const gr  = new PIXI.Graphics();
+
+        playerLocations.forEach((playerLoc) => {
+        gr.beginFill(0xffffff);
+        gr.drawCircle(100+playerLoc.x, 100+playerLoc.y, 35);
+        gr.endFill();
+        app.stage.addChild(gr)
+        });
+        let sprite = PIXI.Sprite.from("/images/table.png");
+
+        console.log(sprite);
+
+        app.stage.addChild(sprite);
+
+
+        try{
+        const card1 = new PIXI.AnimatedSprite(heartsSS.animations.cards);
+        const card2 = new PIXI.AnimatedSprite(diamondsSS.animations.cards);
+        const card3 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
+        const card4 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
+        const card5 = new PIXI.AnimatedSprite(diamondsSS.animations.cards);
+
+
+        // const hand1 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
+        // const hand2 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
+
+
+        // hand1.y = 424;
+        // hand2.y = 424;
+
+        // hand1.x = 312;
+        // hand2.x = 312 +88;
+
+
+
+        const cards = [card1, card2, card3, card4, card5]
+
+        cards.forEach((card)=>{
+        card.width *= 0.5;
+        card.height *= 0.5;
+        });
+
+        card2.currentFrame = 1;
+        card3.currentFrame = 2;
+        card4.currentFrame = 3;
+        card5.currentFrame = 4;
+
+
+        const baseBoardOffset = 275;
+
+        //handCard1.y = 400;
+
+
+        card1.x = baseBoardOffset;
+        card1.y = 250;
+
+        card2.y = 250;
+        card3.y = 250;
+        card4.y = 250;
+        card5.y = 250;
+
+        card2.x = baseBoardOffset + 50;
+        card3.x = baseBoardOffset + (50 *2);
+        card4.x = baseBoardOffset + (50 *3);
+        card5.x = baseBoardOffset + (50 *4);
+
+
+        app.stage.addChild(card1, card2, card3, card4, card5);
+
+        app.stage.addChild(hand1, hand2);
+        } catch (catchException)
+        {
+
+        }
+        }
 
         function addToChatBox(message)
         {
@@ -134,14 +256,45 @@
 
         function gameUpdate(gameData)
         {
+            drawGameScreen();
+            for (let i = 0; i < gameData.seats.length; i++)
+            {
+                var playerName = "Empty";
+                if (gameData.seats[i].player != null)
+                {
+                    playerName =  gameData.seats[i].player.user;
+                }
+
+                var loc = playerLocations[i];
+
+                let text = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 12, fill : 0xe036c1,}, document.getElementById("game-canvas"));
+                
+                try{
+                text.x = loc.x+80;
+                text.y = loc.y+90; 
+                } catch (exception)
+                {
+                
+                }
+                app.stage.addChild(text);
+            }
+
+            //app.stage.clear()
             if (gameData.player_seat != null)
             {
-                $("#join-table").hide()
+                $("#join-table").hide();
+                
+                if (gameData.player_seat.player.hand != null)
+                {
+                drawPlayerHand(gameData.player_seat.player.hand);
+                }
             }
             else
             {
-                $("#join-table").show()
+                $("#join-table").show();
             }
+
+            //gameData.
         }
 
         let websocketManager = new WebsocketManager("10.1.76.8", "4201", addToChatBox, updatePlayers, gameUpdate);
@@ -150,7 +303,7 @@
         {
             console.log("clicked");
             let message = $("#message-input").val();
-            if (!message.empty)
+            if (message != "")
             {
                 console.log(message);
                 await websocketManager.sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
@@ -162,56 +315,56 @@
         websocketManager.joinRoomWithUsername();
 
 
+        drawGameScreen();
     </script>
 
 
-    <div class="container">
-        <div class="row">
-            <h3>
-                Room: {{ room_id }}
-            </h3>
-        </div>
+<script type="module">
 
-        <div class="row">
-            <div class="col">
-                <div id="canvas-div">
-                    <canvas id="game-canvas" style="border:1px solid black;" height="450" width="800"></canvas>
-                    <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
-                    <button id="bet-button" class="btn btn-primary">Bet</button>
-                    <button id="check" class="btn btn-primary">Check</button>
-                    <button id="fold" class="btn btn-primary">Fold</button>
-                </div>
-            </div>
-
-            <div class="col-4">
-                <div class="row">
-                    <div id="chat-box" style="border:1px solid black;height:250px;width:100%;overflow-y:scroll;overflow-x:scroll;">
-                    </div>
-                    <input type="input" id="message-input" placeholder="Chat..."></input>
-                    <button type="button" class="btn btn-primary" onclick="sendChatMessage()">Send</button>
-                </div>
-                <br>
-                <div class="row">
-                    Connected users:
-                    <ul id="players-list">
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div style="display:none;">
-        <img id="table-image" src="{{ url_for('static', filename='images/poker-table.jpg') }}" width="800" height="600" />
-    </div>
-
+    console.log(1)
+    //app.setCanvas(document.getElementById("game-canvas"));
+    //document.body.appendChild(app.canvas);
     
+    
+    await PIXI.Assets.load("/images/table.png");
+    
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/diamonds.png')}}")
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/hearts.png')}}")
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/spades.png')}}")
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/clubs.png')}}")
+    
+    console.log(heartsAtlasData);
+    heartsSS = new PIXI.Spritesheet(PIXI.Texture.from(heartsAtlasData.meta.image), heartsAtlasData);
+    diamondsSS = new PIXI.Spritesheet(PIXI.Texture.from(diamondsAtlasData.meta.image), diamondsAtlasData);
+    clubsSS = new PIXI.Spritesheet(PIXI.Texture.from(clubsAtlasData.meta.image), clubsAtlasData);
+    spadesSS = new PIXI.Spritesheet(PIXI.Texture.from(spadesAtlasData.meta.image), spadesAtlasData);
+    // load the fonts
+    await PIXI.Assets.load('/fonts/Helvetica.ttf');
+    
+    
+    //console.log(atlasData);
+    //const handSpritesheet = new PIXI.Spritesheet(PIXI.Texture.from(handAtlasData.meta.image), handAtlasData);
+    
+    await heartsSS.parse();
+    await diamondsSS.parse();
+    await clubsSS.parse();
+    await spadesSS.parse();
+    
+    //await handSpritesheet.parse();
+    
+    //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);
+    
+    // const text = new Text({
+    //                 text: playerName,
+    //                 style:{
+    //                     fontFamily: 'Helvetica'
+    //                 }
+    //                 });
+    
+    //                 text.x = loc.x;
+    //                 text.y = loc.y;
+    //                 app.stage.addChild(text);
+    drawGameScreen();
+</script>
 
-    <script>
-       
-        // const canvas = document.getElementById("game-canvas");
-        // const ctx = canvas.getContext("2d");
-
-        // var game = new Game("{{ url_for('static', filename='') }}", canvas);
-        // game.drawTable(ctx);
-    </script>
   {% endblock %}

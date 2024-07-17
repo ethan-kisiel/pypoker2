@@ -66,6 +66,9 @@ class RoomManager:
             print(room.capacity)
         return self.rooms.values()
 
+    def start_game(self):
+        pass
+
     async def broadcast_message(self, room_id: int, message: dict):
         try:
             s_message = json.dumps(message)
@@ -74,7 +77,7 @@ class RoomManager:
         except Exception as e:
             print(f"ERROR IN BROADCAST: {e}")
             return
-
+    
         room = self.rooms.get(room_id)
         if room is not None:
             for user in room.get_users():

@@ -29,8 +29,10 @@ class SocketServer:
                 request = await websocket.recv()
                 #print(request)
                 data = json.loads(request)
-            # print(data)
-                if data["type"] == "join":
+
+                message_type = data.get("type")
+                # print(data)
+                if message_type == "join":
                     room_id = data["room_id"]
                     username = data["username"]
                     #print(self.room_manager.rooms)
@@ -44,7 +46,7 @@ class SocketServer:
                                    "room_data": self.room_manager.rooms[room_id].to_dict()}
                         await self.room_manager.broadcast_message(room_id, message)
                         #rint(f"new user connected: {username}")
-                if data["type"] == "chat_message":
+                if message_type == "chat_message":
             
                     room_id = data["room_id"]
                     message = data["message"]
@@ -54,7 +56,7 @@ class SocketServer:
 
                     await self.room_manager.broadcast_message(room_id, message=data)
                 
-                if data["type"] == "request_seat":
+                if message_type == "request_seat":
                     print("Player Requested Seat")
                     room_id = data["room_id"]
                     username = data["username"]
@@ -71,6 +73,9 @@ class SocketServer:
                     #     print(e)
                 else:
                     print(data)
+
+                if message_type == "player_action":
+                    pass
 
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)
@@ -102,3 +107,4 @@ class SocketServer:
         print("LAUNCHING SERVER...")
         self.room_manager = room_manager
         asyncio.run(self.start_server())
+        

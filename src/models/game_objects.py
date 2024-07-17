@@ -80,6 +80,10 @@ class Card:
         range of 1-13 (for scoring hand)
         '''
         return VALUES.index(self.__value) + 1
+    
+    @property
+    def as_dict(self):
+        return {'face': self.__face, 'value': self.__value}
 
     def __str__(self) -> str:
         return f'{self.__face}_{self.__value}'

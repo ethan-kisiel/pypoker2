@@ -13,6 +13,7 @@ class WebsocketManager
         this.chatMessageCallback = chatMessageCallback;
         this.updatePlayersCallback = updatePlayersCallback;
         this.gameUpdateCallback = gameUpdateCallback;
+        this.app = app;
     }
 
     handleSocketComms(data)
