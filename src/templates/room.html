@@ -18,6 +18,8 @@
         let clubsSS;
         let diamondsSS;
         let heartsSS;
+
+        let chipsSS;
     </script>
 
 
@@ -35,7 +37,7 @@
                     <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
                     <button id="bet-button" class="btn btn-primary">Bet</button>
                     <button id="check" class="btn btn-primary" >Check</button>
-                    <button id="fold" class="btn btn-primary">Fold</button>
+                    <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
                 </div>
             </div>
 
@@ -152,6 +154,9 @@
             }
 
         }
+
+
+
         function drawGameScreen()
         {
         for (var i = app.stage.children.length - 1; i >= 0; i--) {	app.stage.removeChild(app.stage.children[i]);};
@@ -177,8 +182,20 @@
         const card3 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
         const card4 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
         const card5 = new PIXI.AnimatedSprite(diamondsSS.animations.cards);
+    
+        for (let i = 0; i<10; i++)
+        {
+            const chip = new PIXI.AnimatedSprite(chipsSS.animations.chips);
+            chip.x = 200;
+            chip.y = (i*15) + 200;
+            
+            chip.width *= 0.25;
+            chip.height *= 0.25;
+            app.stage.addChild(chip);
 
-
+            console.log(chip);
+        }
+      
         // const hand1 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
         // const hand2 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
 
@@ -226,6 +243,9 @@
         app.stage.addChild(card1, card2, card3, card4, card5);
 
         app.stage.addChild(hand1, hand2);
+        app.stage.addChild(chip1);
+
+        
         } catch (catchException)
         {
 
@@ -260,23 +280,32 @@
             for (let i = 0; i < gameData.seats.length; i++)
             {
                 var playerName = "Empty";
+                let textColor = 0xe036c1;
+
                 if (gameData.seats[i].player != null)
                 {
                     playerName =  gameData.seats[i].player.user;
+
+                    if (gameData.seats[i].is_current_turn)
+                    {
+                        textColor = 0xf5d442;
+                    }
+
                 }
 
                 var loc = playerLocations[i];
+                
 
-                let text = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 12, fill : 0xe036c1,}, document.getElementById("game-canvas"));
+                let text = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 12, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
                 
                 try{
                 text.x = loc.x+80;
-                text.y = loc.y+90; 
+                text.y = loc.y+90;
+                app.stage.addChild(text);
                 } catch (exception)
                 {
                 
                 }
-                app.stage.addChild(text);
             }
 
             //app.stage.clear()
@@ -292,6 +321,23 @@
             else
             {
                 $("#join-table").show();
+            }
+
+            $("#bet-button").hide();
+            $("#check").hide();
+            $("#fold").hide();
+
+            if (gameData.player_seat.is_current_turn)
+            {
+                gameData.player_seat.play_options.forEach((play_option)=> {
+                    switch (play_option)
+                    {
+                        case "fold":
+                            $("#fold").show();
+                        case "bet":
+                            $("#bet-button").show();
+                    }
+                });
             }
 
             //gameData.
@@ -310,7 +356,13 @@
 
                 $("#message-input").val('');
             }
-        }    
+        }
+        
+        async function fold()
+        {
+            playerAction = {"play_option": "fold"};
+            await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
+        }
     
         websocketManager.joinRoomWithUsername();
 
@@ -332,12 +384,16 @@
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/hearts.png')}}")
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/spades.png')}}")
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/clubs.png')}}")
+
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Chips/chips.png') }}")
     
     console.log(heartsAtlasData);
     heartsSS = new PIXI.Spritesheet(PIXI.Texture.from(heartsAtlasData.meta.image), heartsAtlasData);
     diamondsSS = new PIXI.Spritesheet(PIXI.Texture.from(diamondsAtlasData.meta.image), diamondsAtlasData);
     clubsSS = new PIXI.Spritesheet(PIXI.Texture.from(clubsAtlasData.meta.image), clubsAtlasData);
     spadesSS = new PIXI.Spritesheet(PIXI.Texture.from(spadesAtlasData.meta.image), spadesAtlasData);
+
+    chipsSS = new PIXI.Spritesheet(PIXI.Texture.from(chipsAtlasData.meta.image), chipsAtlasData);
     // load the fonts
     await PIXI.Assets.load('/fonts/Helvetica.ttf');
     
@@ -349,7 +405,10 @@
     await diamondsSS.parse();
     await clubsSS.parse();
     await spadesSS.parse();
-    
+
+    await chipsSS.parse();
+
+
     //await handSpritesheet.parse();
     
     //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);

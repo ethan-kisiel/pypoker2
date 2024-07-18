@@ -26,9 +26,10 @@ class Button(Enum):
     BIG_BLIND = "big_blind"
     SMALL_BLIND = "small_blind"
 
-
 class PlayOption(Enum):
     BET = "bet"
+    CALL = "call"
+    RAISE = "raise"
     ALL_IN = "all_in"
     CHECK = "check"
     FOLD = "fold"

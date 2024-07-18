@@ -16,9 +16,6 @@ from .game_objects import Deck
 # from game_objects import Board
 # from game_objects import Deck
 
-
-
-
 # class Spectator:
 #     pass
 
@@ -28,16 +25,18 @@ class PlayAction:
     chips: int
 
     def __init__(self, username: str,  play_option: PlayOption, chips: int):
+        self.username = username
         self.play_option = play_option
         self.chips = chips
 
     def as_dict(self) -> dict:
         pass
 
-    def from_dict(self, source: dict):
-        self.username = source.get("username")
-        self.play_option = PlayOption(source.get("play_option"))
-        self.chips = source.get(source.get("chips"))
+    def from_dict(source: dict):
+        username = source.get("username")
+        play_option = PlayOption(source.get("play_option"))
+        chips = source.get(source.get("chips"))
+        return PlayAction(username, play_option, chips)
 
 
 class Player:
@@ -168,8 +167,11 @@ class Seat:
         self.player = player
         self.player.seat = self
 
-    def get_active_next(self):
+    def get_active_next(self, include_folded_players = True):
         if self.next is not None and self.next.player is not None:
+            if not include_folded_players:
+                if self.get_active_next().player.is_folded:
+                    return self.get_active_next().get_active_next(False)
             return self.next
         elif self.next is not None:
             return self.next.get_active_next()
@@ -275,6 +277,9 @@ class Table:
         for seat in self.__seats:
             if seat.button == button:
                 return seat
+    @property  
+    def active_unfolded_seats(self):
+        return [seat for seat in self.active_seats if not seat.player.is_folded]
 
     def process_action(self, play_action: PlayAction):
         player_seat = self.get_user_seat(play_action.username)
@@ -287,13 +292,22 @@ class Table:
             case PlayOption.CHECK:
                 pass
             case PlayOption.FOLD:
-                pass
+                player_seat.player.is_folded = True
             case PlayOption.ALL_IN:
                 pass
             case _:
                 pass
+
+
         player_seat.is_current_turn = False
-        player_seat.get_active_next().is_current_turn = True
+
+        if len(self.active_unfolded_seats) <= 1:
+            self.phase_of_play = PhaseOfPlay.CLEANUP
+            self.progress_phase()
+        else:
+            player_seat.get_active_next(False).is_current_turn = True
+        # if win condition??
+
     
     def handle_bet(self, amount: int):
         self.pot += amount
@@ -322,6 +336,7 @@ class Table:
     def deal_hands(self):
         for seat in self.active_seats:
             seat.player.recieve_hand(self.__deck.r_draw_cards(2))
+            seat.player.is_folded = False
         self.phase_of_play = PhaseOfPlay.PREFLOP
 
 
@@ -356,15 +371,16 @@ class Table:
             big_blind_seat = small_blind_seat.get_active_next()
             big_blind_seat.button = Button.BIG_BLIND
 
-
-
-
-
     def progress_phase(self):
         match self.phase_of_play:
             case PhaseOfPlay.WAITING:
                 self.deal_hands()
                 self.deal_buttons()
+
+                for seat in self.active_seats:
+                    seat.is_current_turn = False
+
+
 
                 # Take Bets from buttons
                 self.find_button_seat(Button.SMALL_BLIND).is_current_turn = True
@@ -385,7 +401,11 @@ class Table:
             case PhaseOfPlay.RIVER:
                 self.phase_of_play = PhaseOfPlay.CLEANUP
             case PhaseOfPlay.CLEANUP:
-                self.phase_of_play = PhaseOfPlay.PREFLOP
+                print(f"Reached CLEANUP phase, proceeding to WAITING phase")
+
+                self.__deck = Deck()
+                self.phase_of_play = PhaseOfPlay.WAITING
+                self.progress_phase()
 
 
     def as_dict(self, user = None):
@@ -401,6 +421,7 @@ class Table:
 
                 if None not in user_seat.player.hand:
                     play_options.append(PlayOption.SHOW_HAND.value)
+                    play_options.append(PlayOption.FOLD.value)
 
                 if (user_seat.is_current_turn
                     and self.phase_of_play != PhaseOfPlay.WAITING
@@ -408,6 +429,10 @@ class Table:
                    # if user_seat.player.chips
                    #TODO: check what player can do based on their chips
                     pass
+                    if user_seat.player.current_bet < self.highest_bet:
+                        play_options.append(PlayOption.BET.value)
+                    elif user_seat.player.current_bet == self.highest_bet:
+                        play_options.append(PlayOption.CHECK.value)
 
                 table_dict["player_seat"]["play_options"] = play_options
             else:
@@ -418,10 +443,9 @@ class Table:
             print(f"Error in table->as_dict: {e}")
         return table_dict
 
+
     def __str__(self):
         return f"Seats: {[seat for seat in self.__seats]}"
-
-
 
 class Room:
 
@@ -487,6 +511,13 @@ class Room:
         dict_data = {"room_id": self.room_id, "connected_users": connected_users}
         return dict_data
     
+    def handle_player_action(self, username: str, play_option: str, chips = None):
+        play_action_dict = {"username": username, "play_option": play_option, "chips": chips}
+        play_action = PlayAction.from_dict(play_action_dict)
+
+        self.__table.process_action(play_action)
+
+
     @property
     def capacity(self):
         return f"{len(self.get_users())}/{self.max_capacity}"

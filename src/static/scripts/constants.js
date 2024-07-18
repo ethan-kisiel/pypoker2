@@ -43,6 +43,51 @@ const cardFrames = {
 }
 
 
+const chipsAtlasData = {
+    frames: {
+        white: {
+            frame: {x: 0, y:0, w:64, h:72}
+        },
+        red: {
+            frame: {x: 64*1, y:0, w:64, h:72}
+        },
+        green: {
+            frame: {x: 64*2, y:0, w:64, h:72}
+        },
+        blue: {
+            frame: {x: 64*3, y:0, w:64, h:72}
+        },
+        black: {
+            frame: {x: 64*4, y:0, w:64, h:72}
+        },
+        yellow: {
+            frame: {x: 0, y:72, w:64, h:72}
+        },
+        orange: {
+            frame: {x: 64*1, y:72, w:64, h:72}
+        },
+        purple: {
+            frame: {x: 64*2, y:72, w:64, h:72}
+        },
+        pink: {
+            frame: {x: 64*3, y:72, w:64, h:72}
+        },
+        brown: {
+            frame: {x: 64*4, y:72, w:64, h:72}
+        },
+
+    },
+    meta: {
+        image: "/images/Chips/chips.png",
+        format: 'RGBA8888',
+        size: { w: 320, h: 144 },
+        scale: 1
+    },
+    animations: {
+        chips: ['white', 'red', 'green', 'blue', 'black', 'yellow', 'orange', 'purple', 'pink', 'brown']
+    }
+}
+
 const spadesAtlasData = {
     frames: cardFrames,
     meta: {
@@ -148,5 +193,15 @@ function getFrameFromValue(cardVal)
             return 11;
         case "Q":
             return 12;
+    }
+}
+
+function getChipFromValue(chipVal)
+{
+    switch (chipVal)
+    {
+        //TODO: Implementation
+        case 10:
+            return null;
     }
 }

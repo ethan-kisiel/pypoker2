@@ -75,8 +75,14 @@ class SocketServer:
                     print(data)
 
                 if message_type == "player_action":
-                    pass
-
+                    room_id = data["room_id"]
+                    action = data["action"]
+                    username = data["username"]
+                    if action["play_option"] == "fold":
+                        self.room_manager.rooms[room_id].handle_player_action(username, "fold")
+                    
+                    
+                    await self.room_manager.broadcast_game_update(room_id)
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)
                 # message = {"type": "room_update", 
