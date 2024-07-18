@@ -1,10 +1,14 @@
 import asyncio
-import time
 import json
+
 from websockets import serve
-from managers.room_manager import RoomManager
+
 from websockets.exceptions import ConnectionClosedError
 from websockets.exceptions import ConnectionClosedOK
+
+from managers.room_manager import RoomManager
+
+
 
 
 class SocketServer:
@@ -60,8 +64,7 @@ class SocketServer:
                     print("Player Requested Seat")
                     room_id = data["room_id"]
                     username = data["username"]
-                    
-                    # try:
+
                     self.room_manager.rooms[room_id].request_seat(username)
                     room = self.room_manager.rooms[room_id]
 
@@ -69,8 +72,7 @@ class SocketServer:
                     print(self.room_manager.rooms[room_id])
 
                     await self.room_manager.broadcast_game_update(room_id)
-                    # except Exception as e:
-                    #     print(e)
+
                 else:
                     print(data)
 
@@ -99,17 +101,21 @@ class SocketServer:
                 await self.room_manager.kick_user(websocket)
                 print(f"EXCEPTION RAISED: {e}")
                 pass
-                #print(e)
-                #print(e)
 
 
     async def start_server(self):
+        '''
+        Starts Websocket server
+        '''
         print(f"STARTING WEBSOCKET SERVER on {self.host}:{self.port}")
         # logging.getLogger("websockets").setLevel(logging.ERROR)
         async with serve(self.handler, self.host, self.port):
             await asyncio.Future()
 
     def run(self, room_manager: RoomManager):
+        '''
+        Runs Websocket server in asynchronous event loop
+        '''
         print("LAUNCHING SERVER...")
         self.room_manager = room_manager
         asyncio.run(self.start_server())

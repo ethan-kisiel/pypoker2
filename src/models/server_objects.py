@@ -9,15 +9,20 @@ from constants import PhaseOfPlay
 from constants import Button
 from constants import PlayOption
 
-from utils.sockets_util import gen_gameid
 from .game_objects import Card
 from .game_objects import Board
 from .game_objects import Deck
-# from game_objects import Board
-# from game_objects import Deck
 
-# class Spectator:
-#     pass
+from utils.sockets_util import gen_gameid
+
+
+
+
+
+
+
+
+
 
 class PlayAction:
     username: str
@@ -37,6 +42,24 @@ class PlayAction:
         play_option = PlayOption(source.get("play_option"))
         chips = source.get(source.get("chips"))
         return PlayAction(username, play_option, chips)
+
+
+
+
+
+
+
+
+
+'''
+  ____  _                          ___  _     _           _   
+ |  _ \| | __ _ _   _  ___ _ __   / _ \| |__ (_) ___  ___| |_ 
+ | |_) | |/ _` | | | |/ _ \ '__| | | | | '_ \| |/ _ \/ __| __|
+ |  __/| | (_| | |_| |  __/ |    | |_| | |_) | |  __/ (__| |_ 
+ |_|   |_|\__,_|\__, |\___|_|     \___/|_.__// |\___|\___|\__|
+                |___/                      |__/               
+'''
+
 
 
 class Player:
@@ -112,6 +135,24 @@ class Player:
         if None in self.hand or self.is_folded:
             return False
         return True
+
+
+
+
+
+
+
+
+
+
+'''
+  _   _                  ___  _     _           _   
+ | | | |___  ___ _ __   / _ \| |__ (_) ___  ___| |_ 
+ | | | / __|/ _ \ '__| | | | | '_ \| |/ _ \/ __| __|
+ | |_| \__ \  __/ |    | |_| | |_) | |  __/ (__| |_ 
+  \___/|___/\___|_|     \___/|_.__// |\___|\___|\__|
+                                 |__/               
+'''
 
 
 
@@ -200,6 +241,24 @@ class Seat:
         return f"Seated user: {self.player.user.username if self.player is not None else None}"
 
 
+
+
+
+
+
+
+
+'''
+  _____     _     _         ___  _     _           _   
+ |_   _|_ _| |__ | | ___   / _ \| |__ (_) ___  ___| |_ 
+   | |/ _` | '_ \| |/ _ \ | | | | '_ \| |/ _ \/ __| __|
+   | | (_| | |_) | |  __/ | |_| | |_) | |  __/ (__| |_ 
+   |_|\__,_|_.__/|_|\___|  \___/|_.__// |\___|\___|\__|
+                                    |__/               
+'''
+
+
+
 class Table:
     max_seats: int
     board: Board
@@ -277,63 +336,18 @@ class Table:
         for seat in self.__seats:
             if seat.button == button:
                 return seat
-    @property  
-    def active_unfolded_seats(self):
-        return [seat for seat in self.active_seats if not seat.player.is_folded]
 
-    def process_action(self, play_action: PlayAction):
-        player_seat = self.get_user_seat(play_action.username)
-        match play_action.play_option:
-            case PlayOption.ALL_IN:
-                #self.handle_bet()
-                pass
-            case PlayOption.BET:
-                pass
-            case PlayOption.CHECK:
-                pass
-            case PlayOption.FOLD:
-                player_seat.player.is_folded = True
-            case PlayOption.ALL_IN:
-                pass
-            case _:
-                pass
+    def handle_bet(self, amount: int, player_current_bet: int):
 
-
-        player_seat.is_current_turn = False
-
-        if len(self.active_unfolded_seats) <= 1:
-            self.phase_of_play = PhaseOfPlay.CLEANUP
-            self.progress_phase()
-        else:
-            player_seat.get_active_next(False).is_current_turn = True
-        # if win condition??
-
-    
-    def handle_bet(self, amount: int):
         self.pot += amount
         if amount > self.highest_bet:
             self.highest_bet = amount
 
-    @property
-    def active_seats(self):
-        return [seat for seat in self.__seats if seat.player is not None]
-
-    @property
-    def are_bets_equal(self):
-        for seat in self.active_seats:
-            if seat.player.is_folded or seat.player.is_all_in:
-                continue
-            if seat.player.current_bet != self.highest_bet:
-                return False
-        return True
-
-
-    def game_update(self, username: str):
-        # gets game data based on the given user_id's permissions
-        pass
-
 
     def deal_hands(self):
+        '''
+        gives new hand of 2 cards to each active player
+        '''
         for seat in self.active_seats:
             seat.player.recieve_hand(self.__deck.r_draw_cards(2))
             seat.player.is_folded = False
@@ -341,6 +355,10 @@ class Table:
 
 
     def deal_buttons(self):
+        '''
+        Moves the dealer button to the next player after the dealer,
+        then the small and big blind are moved to players next to the new dealer
+        '''
         dealer = self.find_button_seat(Button.DEALER)
         if dealer is None:
             self.active_seats[0].button = Button.DEALER
@@ -371,26 +389,64 @@ class Table:
             big_blind_seat = small_blind_seat.get_active_next()
             big_blind_seat.button = Button.BIG_BLIND
 
+
+
+    def process_action(self, play_action: PlayAction):
+        '''
+        Takes PlayAction object and processes given play action.
+        This function is used in the RoomManager
+        '''
+        player_seat = self.get_user_seat(play_action.username)
+        match play_action.play_option:
+            case PlayOption.ALL_IN:
+                #self.handle_bet()
+                pass
+            case PlayOption.BET:
+                pass
+            case PlayOption.CHECK:
+                pass
+            case PlayOption.FOLD:
+                player_seat.player.is_folded = True
+            case PlayOption.ALL_IN:
+                pass
+            case _:
+                pass
+
+
+        player_seat.is_current_turn = False
+
+        if len(self.active_unfolded_seats) <= 1:
+            self.phase_of_play = PhaseOfPlay.CLEANUP
+            self.progress_phase()
+        else:
+            player_seat.get_active_next(False).is_current_turn = True
+        # if win condition??
+
     def progress_phase(self):
+        '''
+        Handles phase progression, and the game state interactions that
+        are triggered by changes in phase, ie drawing flop cards, resetting the board, etc
+        '''
         match self.phase_of_play:
             case PhaseOfPlay.WAITING:
                 self.deal_hands()
                 self.deal_buttons()
 
+                # Reset seat current turns
                 for seat in self.active_seats:
                     seat.is_current_turn = False
-
-
 
                 # Take Bets from buttons
                 self.find_button_seat(Button.SMALL_BLIND).is_current_turn = True
                 # take blinds
-                bb_bet = self.find_button_seat(Button.BIG_BLIND).player.chip_bet(BIG_BLIND)
-                sb_bet = self.find_button_seat(Button.SMALL_BLIND).player.chip_bet(SMALL_BLIND)
-                #
+                bb_seat = self.find_button_seat(Button.BIG_BLIND)
+                sb_seat = self.find_button_seat(Button.SMALL_BLIND)
 
-                self.handle_bet(bb_bet)
-                self.handle_bet(sb_bet)
+                bb_bet = bb_seat.player.chip_bet(BIG_BLIND)
+                sb_bet = sb_seat.player.chip_bet(SMALL_BLIND)
+
+                self.handle_bet(bb_bet, bb_seat.player.current_bet)
+                self.handle_bet(sb_bet, sb_seat.player.current_bet)
 
                 self.phase_of_play = PhaseOfPlay.PREFLOP
 
@@ -407,10 +463,15 @@ class Table:
                 self.phase_of_play = PhaseOfPlay.WAITING
                 self.progress_phase()
 
-
-    def as_dict(self, user = None):
+    def as_dict(self, user = None) -> dict:
+        '''
+        Takes a username as input,
+        returns the json/dict representation of the table's data, as well as...
+        player specific information if the given username is not None
+        '''
         table_dict = dict()
         user_seat = None
+
         try:
             if user is not None:
                 user_seat =  self.get_user_seat(user)
@@ -444,8 +505,57 @@ class Table:
         return table_dict
 
 
+    @property
+    def active_seats(self) -> list:
+        '''
+        Returns every seat in table, where seat.player is assigned to a player object
+        '''
+        return [seat for seat in self.__seats if seat.player is not None]
+
+
+    @property  
+    def active_unfolded_seats(self):
+        '''
+        Returns every active seat in table, where the seat.player is not currently folded
+        '''
+        return [seat for seat in self.active_seats if not seat.player.is_folded]
+
+
+    @property
+    def are_bets_equal(self) -> bool:
+        '''
+        Returns true if all of the active unfolded seats are either all in, or their
+        '''
+        for seat in self.active_unfolded_seats:
+            if seat.player.is_folded or seat.player.is_all_in:
+                continue
+            if seat.player.current_bet != self.highest_bet:
+                return False
+        return True
+    
+
     def __str__(self):
         return f"Seats: {[seat for seat in self.__seats]}"
+
+
+
+
+
+
+
+
+
+
+'''
+  ____                          ___  _     _           _   
+ |  _ \ ___   ___  _ __ ___    / _ \| |__ (_) ___  ___| |_ 
+ | |_) / _ \ / _ \| '_ ` _ \  | | | | '_ \| |/ _ \/ __| __|
+ |  _ < (_) | (_) | | | | | | | |_| | |_) | |  __/ (__| |_ 
+ |_| \_\___/ \___/|_| |_| |_|  \___/|_.__// |\___|\___|\__|
+                                        |__/               
+'''
+
+
 
 class Room:
 

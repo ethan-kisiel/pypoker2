@@ -90,6 +90,15 @@ class Card:
 
     def __repr__(self) -> str:
         return f'{self.__face}_{self.__value}'
+    
+
+
+
+
+
+
+
+
 
 class Deck:
     def __init__(self) -> None:
@@ -152,9 +161,20 @@ class Deck:
         return cards
 
 
+
+
+
+
+
+
+
+
+
+
 class Board:
+    __cards: list[Card]
     def __init__(self) -> None:
-        self.__board = []
+        self.__cards = []
         self.__phase = 0
 
     def incriment_phase(self) -> None:
@@ -166,19 +186,19 @@ class Board:
         sets flop to 3 random cards
         '''
         deck.r_draw_card()
-        self.__board[0:3] = deck.r_draw_cards(3)
+        self.__cards[0:3] = deck.r_draw_cards(3)
 
     def draw_turn(self, deck: Deck) -> None:
         deck.r_draw_card() # burn card
-        self.__board.append(deck.r_draw_card())
+        self.__cards.append(deck.r_draw_card())
 
     def draw_river(self, deck: Deck) -> None:
         deck.r_draw_card() # burn card
-        self.__board.append(deck.r_draw_card())
+        self.__cards.append(deck.r_draw_card())
 
     def get_board(self) -> list[Card]:
         '''
         Returns all Cards, which are currently
         a part of the board
         '''
-        return self.__board
+        return self.__cards
