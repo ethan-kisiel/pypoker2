@@ -41,6 +41,7 @@ const cardFrames = {
     },
 
 }
+const cardFaces = ['ace', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'jack', 'king', 'queen'];
 
 
 const chipsAtlasData = {
@@ -97,7 +98,7 @@ const spadesAtlasData = {
         scale: 1
     },
     animations: {
-        cards: ['ace', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'jack', 'king', 'queen'], //array of frames by name
+        cards: cardFaces, //array of frames by name
     }
 }
 
@@ -110,7 +111,7 @@ const clubsAtlasData = {
         scale: 1
     },
     animations: {
-        cards: ['ace', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'jack', 'king', 'queen'], //array of frames by name
+        cards: cardFaces, //array of frames by name
     }
 }
 
@@ -123,7 +124,7 @@ const diamondsAtlasData = {
         scale: 1
     },
     animations: {
-        cards: ['ace', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'jack', 'king', 'queen'], //array of frames by name
+        cards: cardFaces, //array of frames by name
     }
 }
 
@@ -136,30 +137,49 @@ const heartsAtlasData = {
         scale: 1
     },
     animations: {
-        cards: ['ace', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'jack', 'king', 'queen'], //array of frames by name
+        cards: cardFaces, //array of frames by name
     }
 }
+
+const backsAtlasData = {
+    frames: {
+        red: {
+        frame: { x: 0, y:0, w:88, h:124 },
+        },
+    },
+    meta: {
+        image: "/images/Cards/backs.png",
+        format: 'RGBA8888',
+        size: { w: 88*2, h: 124 },
+        scale: 1
+    },
+    animations: {
+        cards: ['red'], //array of frames by name
+    }
+}
+
+
 
 
 const playerLocations = [
 
     {
-        x: 60, y: 70
+        x: 60, y: 70, pos: "topLeft"
     },
     {
-        x: 10, y: 185
+        x: 10, y: 185, pos: "midLeft"
     },
     {
-        x: 60, y: 310
+        x: 60, y: 310, pos: "botLeft"
     },
     {
-        x: 530, y: 310
+        x: 530, y: 310, pos: "topRight"
     },
     {
-        x: 580, y: 185
+        x: 580, y: 185, pos: "midRight"
     },
     {
-        x: 530, y: 70
+        x: 530, y: 70, pos: "botRight"
     },
 ]
 
@@ -193,6 +213,8 @@ function getFrameFromValue(cardVal)
             return 11;
         case "Q":
             return 12;
+        case "X":
+            return 0;
     }
 }
 

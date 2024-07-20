@@ -80,10 +80,22 @@ class SocketServer:
                     room_id = data["room_id"]
                     action = data["action"]
                     username = data["username"]
+
+                    chips = action.get("chips")
+
+                    room = self.room_manager.rooms[room_id]
+
                     if action["play_option"] == "fold":
-                        self.room_manager.rooms[room_id].handle_player_action(username, "fold")
-                    
-                    
+                        room.handle_player_action(username, "fold")
+                    if action["play_option"] == "check":
+                        room.handle_player_action(username, "check")
+                    if action["play_option"] == "raise":
+                        room.handle_player_action(username, "raise", chips)
+                    if action["play_option"] == "bet":
+                        room.handle_player_action(username, "bet", chips)
+                    if action["play_option"] == "call":
+                        room.handle_player_action(username, "call")
+
                     await self.room_manager.broadcast_game_update(room_id)
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)

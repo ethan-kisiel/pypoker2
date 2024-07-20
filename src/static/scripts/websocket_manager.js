@@ -42,12 +42,13 @@ class WebsocketManager
             if (event.type == "game_update")
             {
                 this.gameUpdateCallback(event.table);
-                console.log(event.table)
+                console.log(event.table);
+
                 for (var i = 0; i < event.table.seats.length; i++)
                 {
                     if (event.table.seats[i].player != null)
                     {
-                        console.log(event.table.seats[i]);
+                        //console.log(event.table.seats[i]);
                     }
                 }
             }

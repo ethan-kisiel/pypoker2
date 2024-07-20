@@ -20,27 +20,25 @@
         let heartsSS;
 
         let chipsSS;
+
     </script>
 
 
     <div class="container">
         <div class="row">
+            <div class="col">
             <h3>
                 Room: {{ room_id }}
             </h3>
+            </div>
         </div>
 
         <div class="row">
             <div class="col">
                 <div id="canvas-div">
                     <canvas id="game-canvas" style="border:1px solid black;" height="450" width="800"></canvas>
-                    <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
-                    <button id="bet-button" class="btn btn-primary">Bet</button>
-                    <button id="check" class="btn btn-primary" >Check</button>
-                    <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
                 </div>
             </div>
-
             <div class="col">
                 <div class="row">
                     <div id="chat-box" style="border:1px solid black;height:250px;width:100%;overflow-y:scroll;overflow-x:scroll;">
@@ -58,6 +56,18 @@
                 </div>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col">
+                <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
+                <button id="bet-button" class="bet btn btn-primary">Bet</button>
+                <input class="bet" id="bet-input" type="number" min="0">
+                <button id="check" class="btn btn-primary" onclick="check()" >Check</button>
+                <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
+                <button id="call" class="btn btn-primary" onclick="call()">Call</button>
+            </div>
+        </div>
+        
     </div>
 
     <div style="display:none;">
@@ -68,9 +78,10 @@
 
 
     <script>
-        $("#bet-button").hide();
+        $(".bet").hide();
         $("#check").hide();
         $("#fold").hide();
+        $("#call").hide();
 
         $("#message-input").on('keypress',function(e) {
             if(e.which == 13) {
@@ -85,6 +96,7 @@
             backgroundColor: "#858163",
             antialias: true,
         });
+
         //const websockeAddress = "ws://127.0.0.1:4201";
 
         // console.log(2)
@@ -108,6 +120,28 @@
                     return heartsSS;
                 case "s":
                     return spadesSS;
+                case "X":
+                    return null;
+            }
+        }
+
+        function drawBoard(board)
+        {
+            for (let i = 0; i < board.length; i++)
+            {
+                let cardData = board[i];
+                let cardFace = getAnimationForFace(cardData.face);
+                let cardVal = getFrameFromValue(cardData.value);
+
+                let card = new PIXI.AnimatedSprite(cardFace.animations.cards);
+                card.currentFrame = cardVal;
+
+                card.width *= 0.5;
+                card.height *= 0.5;
+                card.x = 275 + (50*i);
+                card.y = 250;
+                
+                app.stage.addChild(card);
             }
         }
 
@@ -156,7 +190,6 @@
         }
 
 
-
         function drawGameScreen()
         {
         for (var i = app.stage.children.length - 1; i >= 0; i--) {	app.stage.removeChild(app.stage.children[i]);};
@@ -165,18 +198,22 @@
 
         playerLocations.forEach((playerLoc) => {
         gr.beginFill(0xffffff);
-        gr.drawCircle(100+playerLoc.x, 100+playerLoc.y, 35);
+        gr.drawCircle(100+playerLoc.x, 100+playerLoc.y, 45);
         gr.endFill();
+
+
         app.stage.addChild(gr)
         });
         let sprite = PIXI.Sprite.from("/images/table.png");
 
-        console.log(sprite);
+        //console.log(sprite);
 
         app.stage.addChild(sprite);
 
 
-        try{
+        try
+        {
+
         const card1 = new PIXI.AnimatedSprite(heartsSS.animations.cards);
         const card2 = new PIXI.AnimatedSprite(diamondsSS.animations.cards);
         const card3 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
@@ -193,7 +230,7 @@
             chip.height *= 0.25;
             app.stage.addChild(chip);
 
-            console.log(chip);
+            //console.log(chip);
         }
       
         // const hand1 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
@@ -208,42 +245,42 @@
 
 
 
-        const cards = [card1, card2, card3, card4, card5]
+        // const cards = [card1, card2, card3, card4, card5]
 
-        cards.forEach((card)=>{
-        card.width *= 0.5;
-        card.height *= 0.5;
-        });
+        // cards.forEach((card)=>{
+        // card.width *= 0.5;
+        // card.height *= 0.5;
+        // });
 
-        card2.currentFrame = 1;
-        card3.currentFrame = 2;
-        card4.currentFrame = 3;
-        card5.currentFrame = 4;
-
-
-        const baseBoardOffset = 275;
-
-        //handCard1.y = 400;
+        // card2.currentFrame = 1;
+        // card3.currentFrame = 2;
+        // card4.currentFrame = 3;
+        // card5.currentFrame = 4;
 
 
-        card1.x = baseBoardOffset;
-        card1.y = 250;
+        // const baseBoardOffset = 275;
 
-        card2.y = 250;
-        card3.y = 250;
-        card4.y = 250;
-        card5.y = 250;
-
-        card2.x = baseBoardOffset + 50;
-        card3.x = baseBoardOffset + (50 *2);
-        card4.x = baseBoardOffset + (50 *3);
-        card5.x = baseBoardOffset + (50 *4);
+        // //handCard1.y = 400;
 
 
-        app.stage.addChild(card1, card2, card3, card4, card5);
+        // card1.x = baseBoardOffset;
+        // card1.y = 250;
 
-        app.stage.addChild(hand1, hand2);
-        app.stage.addChild(chip1);
+        // card2.y = 250;
+        // card3.y = 250;
+        // card4.y = 250;
+        // card5.y = 250;
+
+        // card2.x = baseBoardOffset + 50;
+        // card3.x = baseBoardOffset + (50 *2);
+        // card4.x = baseBoardOffset + (50 *3);
+        // card5.x = baseBoardOffset + (50 *4);
+
+
+        // app.stage.addChild(card1, card2, card3, card4, card5);
+
+        // app.stage.addChild(hand1, hand2);
+        // app.stage.addChild(chip1);
 
         
         } catch (catchException)
@@ -277,10 +314,33 @@
         function gameUpdate(gameData)
         {
             drawGameScreen();
+
+            let playerBet = `Your Bet: $${gameData.player_seat.player.current_bet}`;
+            let playerBetText = new PIXI.Text(playerBet, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
+            
+            let potText = new PIXI.Text(gameData.pot, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
+            
+            
+            potText.width *= 0.85;
+            potText.height *= 0.85;
+
+            potText.x = 300 - (potText.width/2);
+            potText.y = 350;
+
+            playerBetText.y = 500;
+
+            app.stage.addChild(playerBetText, potText);
+
+
+            drawBoard(gameData.board);
+
             for (let i = 0; i < gameData.seats.length; i++)
             {
                 var playerName = "Empty";
+                var betAmount = "";
+
                 let textColor = 0xe036c1;
+
 
                 if (gameData.seats[i].player != null)
                 {
@@ -291,20 +351,42 @@
                         textColor = 0xf5d442;
                     }
 
+                    betAmount = `$${gameData.seats[i].player.current_bet}`
+
                 }
 
                 var loc = playerLocations[i];
                 
 
-                let text = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 12, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
+                let nameText = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 22, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
+                let betText = new PIXI.Text(betAmount,{fontFamily : 'Helvetica', fontSize: 22, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
                 
+
                 try{
-                text.x = loc.x+80;
-                text.y = loc.y+90;
-                app.stage.addChild(text);
+                var offset;
+                if (loc.x > 400)
+                {
+                    offset = 50 +  nameText.width;
+                }
+                else
+                {
+                    offset = 120 - nameText.width
+                }
+
+                nameText.width *= 0.75;
+                nameText.height *= 0.75;
+
+                
+                nameText.x = loc.x+offset;
+                nameText.y = loc.y+60;
+
+                betText.x = loc.x +80;
+                betText.y = loc.y+100;
+
+                app.stage.addChild(nameText, betText);
                 } catch (exception)
                 {
-                
+                    console.log(exception);
                 }
             }
 
@@ -323,20 +405,44 @@
                 $("#join-table").show();
             }
 
-            $("#bet-button").hide();
+            $(".bet").hide();
             $("#check").hide();
             $("#fold").hide();
+            $("#call").hide();
 
             if (gameData.player_seat.is_current_turn)
             {
+                let callText = text = `Call $${gameData.highest_bet - gameData.player_seat.player.current_bet}`;
+                
+                //$("#call").prop("value", callText);
+                $("#call").text(callText);
+                console.log(callText);
                 gameData.player_seat.play_options.forEach((play_option)=> {
-                    switch (play_option)
+                    if (play_option == "fold")
                     {
-                        case "fold":
-                            $("#fold").show();
-                        case "bet":
-                            $("#bet-button").show();
+                        $("#fold").show();
                     }
+                    if (play_option == "bet")
+                    {
+                        $(".bet").show();
+                    }
+                    if (play_option == "check")
+                    {
+                        $("#check").show();
+                    }
+                    if (play_option == "call")
+                    {
+                        $("#call").show();
+                    }
+                    // switch (play_option)
+                    // {http://127.0.0.1:5000/room/116550/1http://127.0.0.1:5000/room/116550/1
+                    //     case "fold":
+
+                    //     case "bet":
+                    //         $("#bet-button").show();
+                    //     case "check":
+                    //         $("#check").show()
+                    // }
                 });
             }
 
@@ -347,11 +453,11 @@
 
         async function sendChatMessage()
         {
-            console.log("clicked");
+            //console.log("clicked");
             let message = $("#message-input").val();
             if (message != "")
             {
-                console.log(message);
+                //console.log(message);
                 await websocketManager.sendWebsocketMessage({"type":"chat_message", "room_id":room_id, "username":username, "message": message});
 
                 $("#message-input").val('');
@@ -363,6 +469,28 @@
             playerAction = {"play_option": "fold"};
             await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
         }
+
+        async function check()
+        {
+            playerAction = {"play_option": "check"};
+            await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
+        }
+
+        async function call()
+        {
+            playerAction = {"play_option": "call"};
+            await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
+        }
+
+        async function bet()
+        {
+
+        }
+
+        async function raise()
+        {
+
+        }
     
         websocketManager.joinRoomWithUsername();
 
@@ -373,7 +501,7 @@
 
 <script type="module">
 
-    console.log(1)
+    //console.log(1)
     //app.setCanvas(document.getElementById("game-canvas"));
     //document.body.appendChild(app.canvas);
     
@@ -387,7 +515,7 @@
 
     await PIXI.Assets.load("{{ url_for('static', filename='images/Chips/chips.png') }}")
     
-    console.log(heartsAtlasData);
+    //console.log(heartsAtlasData);
     heartsSS = new PIXI.Spritesheet(PIXI.Texture.from(heartsAtlasData.meta.image), heartsAtlasData);
     diamondsSS = new PIXI.Spritesheet(PIXI.Texture.from(diamondsAtlasData.meta.image), diamondsAtlasData);
     clubsSS = new PIXI.Spritesheet(PIXI.Texture.from(clubsAtlasData.meta.image), clubsAtlasData);

@@ -175,10 +175,7 @@ class Board:
     __cards: list[Card]
     def __init__(self) -> None:
         self.__cards = []
-        self.__phase = 0
 
-    def incriment_phase(self) -> None:
-        self.__phase += 1
 
     def draw_flop(self, deck: Deck) -> None:
         '''
@@ -196,7 +193,8 @@ class Board:
         deck.r_draw_card() # burn card
         self.__cards.append(deck.r_draw_card())
 
-    def get_board(self) -> list[Card]:
+    @property
+    def cards(self) -> list[Card]:
         '''
         Returns all Cards, which are currently
         a part of the board
