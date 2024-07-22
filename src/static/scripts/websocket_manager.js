@@ -2,7 +2,7 @@ const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
 class WebsocketManager
 {
-    constructor (address, port, chatMessageCallback, updatePlayersCallback, gameUpdateCallback)
+    constructor (address, port, chatMessageCallback, updatePlayersCallback, gameUpdateCallback, playSoundCallback)
     {
         let fullAddress = "ws://" + address + ":" + port;
 
@@ -13,6 +13,7 @@ class WebsocketManager
         this.chatMessageCallback = chatMessageCallback;
         this.updatePlayersCallback = updatePlayersCallback;
         this.gameUpdateCallback = gameUpdateCallback;
+        this.playSoundCallback = playSoundCallback;
         this.app = app;
     }
 
@@ -61,7 +62,13 @@ class WebsocketManager
             if (event.type == "chat_message")
             {
                 this.chatMessageCallback(event.username + ": " + event.message);
-            }    
+            }
+
+            if (event.type == "play_sound")
+            {
+                let sound = event.sound;
+                this.playSoundCallback(sound);
+            }
     }
 
 

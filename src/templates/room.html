@@ -18,6 +18,7 @@
         let clubsSS;
         let diamondsSS;
         let heartsSS;
+        let backsSS;
 
         let chipsSS;
 
@@ -60,8 +61,8 @@
         <div class="row">
             <div class="col">
                 <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
-                <button id="bet-button" class="bet btn btn-primary">Bet</button>
-                <input class="bet" id="bet-input" type="number" min="0">
+                <button id="bet-button" class="bet btn btn-primary" onclick="bet()">Bet</button>
+                <input size="5" class="bet" id="bet-input" type="number" min="1" max="10000" value="1"></input>
                 <button id="check" class="btn btn-primary" onclick="check()" >Check</button>
                 <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
                 <button id="call" class="btn btn-primary" onclick="call()">Call</button>
@@ -73,8 +74,6 @@
     <div style="display:none;">
         <img id="table-image" src="{{ url_for('static', filename='images/poker-table.jpg') }}" width="800" height="600" />
     </div>
-
-
 
 
     <script>
@@ -107,6 +106,7 @@
         const room_id = {{room_id}};
 
         var notificationAudio = new Audio("{{ url_for('static', filename='sfx/notification.mp3')}}");
+        var checkAudio = new Audio("{{ url_for('static', filename='sfx/check.mp3')}}")
 
         function getAnimationForFace(face)
         {
@@ -121,7 +121,9 @@
                 case "s":
                     return spadesSS;
                 case "X":
-                    return null;
+                    return backsSS;
+                default:
+                    return backsSS;
             }
         }
 
@@ -142,6 +144,79 @@
                 card.y = 250;
                 
                 app.stage.addChild(card);
+            }
+        }
+        function drawTableHands(locData, cardsData)
+        {
+            try
+            {
+            if (cardsData == null)
+            {
+                console.log("EXITING FROM TABLE HANDS FUNCTION");
+                return;
+            }
+
+
+            let card1Data = cardsData[0];
+            let card2Data = cardsData[1];
+
+            let card1Face = getAnimationForFace(card1Data.face);
+            let card2Face = getAnimationForFace(card2Data.face);
+
+            let card1Val = getFrameFromValue(card1Data.value);
+            let card2Val = getFrameFromValue(card2Data.value);
+
+            let card1 = new PIXI.AnimatedSprite(card1Face.animations.cards);
+            card1.currentFrame = card1Val;
+
+            let card2 = new PIXI.AnimatedSprite(card2Face.animations.cards);
+            card2.currentFrame = card2Val;
+
+            card1.anchor.set(0.5);
+            card2.anchor.set(0.5);
+
+
+            card1.width *= 0.5; card1.height *= 0.5;
+            card2.width *= 0.5; card2.height *= 0.5;
+
+            
+    
+            if (locData.pos == "topLeft")
+            {
+                card1.rotation = 3.15;
+                card2.rotation = 3.15;
+                
+                card1.x = locData.x + 100;
+                card2.x = locData.x + 122;
+                card1.y = locData.y + 100;
+                card2.y = locData.y + 100;
+            }
+            
+            if (locData.pos == "topRight")
+            {
+                card1.rotation = 3.15;
+                card2.rotation = 3.15;
+
+                card1.x = locData.x + 60;
+                card2.x = locData.x + 104;
+
+                card1.y = locData.y + 200;
+                card2.y = locData.y + 200;
+            }
+
+                // case "botLeft":
+                //     return;
+                // case "botRight":
+                //     return;
+                // case "midLeft":
+                //     return;
+                // case "midRight":
+                //     return;
+
+            app.stage.addChild(card1,card2);
+            } catch (exception)
+            {
+
             }
         }
 
@@ -197,8 +272,8 @@
         const gr  = new PIXI.Graphics();
 
         playerLocations.forEach((playerLoc) => {
-        gr.beginFill(0xffffff);
-        gr.drawCircle(100+playerLoc.x, 100+playerLoc.y, 45);
+        gr.beginFill(0x99936d);
+        gr.drawCircle(100+playerLoc.x, 100+playerLoc.y, 60);
         gr.endFill();
 
 
@@ -219,68 +294,20 @@
         const card3 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
         const card4 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
         const card5 = new PIXI.AnimatedSprite(diamondsSS.animations.cards);
-    
-        for (let i = 0; i<10; i++)
-        {
-            const chip = new PIXI.AnimatedSprite(chipsSS.animations.chips);
-            chip.x = 200;
-            chip.y = (i*15) + 200;
+
+
+        // for (let i = 0; i<10; i++)
+        // {
+        //     const chip = new PIXI.AnimatedSprite(chipsSS.animations.chips);
+        //     chip.x = 200;
+        //     chip.y = (i*15) + 200;
             
-            chip.width *= 0.25;
-            chip.height *= 0.25;
-            app.stage.addChild(chip);
+        //     chip.width *= 0.25;
+        //     chip.height *= 0.25;
+        //     app.stage.addChild(chip);
 
-            //console.log(chip);
-        }
-      
-        // const hand1 = new PIXI.AnimatedSprite(clubsSS.animations.cards);
-        // const hand2 = new PIXI.AnimatedSprite(spadesSS.animations.cards);
-
-
-        // hand1.y = 424;
-        // hand2.y = 424;
-
-        // hand1.x = 312;
-        // hand2.x = 312 +88;
-
-
-
-        // const cards = [card1, card2, card3, card4, card5]
-
-        // cards.forEach((card)=>{
-        // card.width *= 0.5;
-        // card.height *= 0.5;
-        // });
-
-        // card2.currentFrame = 1;
-        // card3.currentFrame = 2;
-        // card4.currentFrame = 3;
-        // card5.currentFrame = 4;
-
-
-        // const baseBoardOffset = 275;
-
-        // //handCard1.y = 400;
-
-
-        // card1.x = baseBoardOffset;
-        // card1.y = 250;
-
-        // card2.y = 250;
-        // card3.y = 250;
-        // card4.y = 250;
-        // card5.y = 250;
-
-        // card2.x = baseBoardOffset + 50;
-        // card3.x = baseBoardOffset + (50 *2);
-        // card4.x = baseBoardOffset + (50 *3);
-        // card5.x = baseBoardOffset + (50 *4);
-
-
-        // app.stage.addChild(card1, card2, card3, card4, card5);
-
-        // app.stage.addChild(hand1, hand2);
-        // app.stage.addChild(chip1);
+        //     //console.log(chip);
+        // }
 
         
         } catch (catchException)
@@ -300,6 +327,15 @@
             //$("#chat-box").scroll()
         }
 
+
+        function playSound(sound)
+        {
+            if (sound == "check")
+            {
+                checkAudio.play();
+            }
+        }
+
         function updatePlayers(roomData)
         {
             $("#players-list").empty();
@@ -315,21 +351,28 @@
         {
             drawGameScreen();
 
-            let playerBet = `Your Bet: $${gameData.player_seat.player.current_bet}`;
-            let playerBetText = new PIXI.Text(playerBet, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
-            
-            let potText = new PIXI.Text(gameData.pot, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
-            
-            
+            let potText = new PIXI.Text(`$${gameData.pot}`, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
+
             potText.width *= 0.85;
             potText.height *= 0.85;
 
-            potText.x = 300 - (potText.width/2);
+            potText.x = 400 - (potText.width/2);
             potText.y = 350;
 
-            playerBetText.y = 500;
+            
+            try
+            {
+                let playerBet = `Your Bet: $${gameData.player_seat.player.current_bet}`;
+                let playerBetText = new PIXI.Text(playerBet, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
 
-            app.stage.addChild(playerBetText, potText);
+                playerBetText.y = 500;
+
+                app.stage.addChild(playerBetText);
+            } catch (exception)
+            {
+                
+            }
+            app.stage.addChild(potText);
 
 
             drawBoard(gameData.board);
@@ -342,6 +385,8 @@
                 let textColor = 0xe036c1;
 
 
+                var loc = playerLocations[i];
+
                 if (gameData.seats[i].player != null)
                 {
                     playerName =  gameData.seats[i].player.user;
@@ -353,10 +398,9 @@
 
                     betAmount = `$${gameData.seats[i].player.current_bet}`
 
+                    drawTableHands(loc, gameData.seats[i].player.hand);
                 }
 
-                var loc = playerLocations[i];
-                
 
                 let nameText = new PIXI.Text(playerName,{fontFamily : 'Helvetica', fontSize: 22, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
                 let betText = new PIXI.Text(betAmount,{fontFamily : 'Helvetica', fontSize: 22, fill : textColor, stroke: 0x35383b}, document.getElementById("game-canvas"));
@@ -366,11 +410,11 @@
                 var offset;
                 if (loc.x > 400)
                 {
-                    offset = 50 +  nameText.width;
+                    offset = 50 + ( nameText.width/2);
                 }
                 else
                 {
-                    offset = 120 - nameText.width
+                    offset = 120 - (nameText.width/2);
                 }
 
                 nameText.width *= 0.75;
@@ -388,6 +432,7 @@
                 {
                     console.log(exception);
                 }
+
             }
 
             //app.stage.clear()
@@ -397,7 +442,7 @@
                 
                 if (gameData.player_seat.player.hand != null)
                 {
-                drawPlayerHand(gameData.player_seat.player.hand);
+                    drawPlayerHand(gameData.player_seat.player.hand);
                 }
             }
             else
@@ -434,22 +479,13 @@
                     {
                         $("#call").show();
                     }
-                    // switch (play_option)
-                    // {http://127.0.0.1:5000/room/116550/1http://127.0.0.1:5000/room/116550/1
-                    //     case "fold":
-
-                    //     case "bet":
-                    //         $("#bet-button").show();
-                    //     case "check":
-                    //         $("#check").show()
-                    // }
                 });
             }
 
             //gameData.
         }
 
-        let websocketManager = new WebsocketManager("10.1.76.8", "4201", addToChatBox, updatePlayers, gameUpdate);
+        let websocketManager = new WebsocketManager("10.1.77.242", "4201", addToChatBox, updatePlayers, gameUpdate, playSound);
 
         async function sendChatMessage()
         {
@@ -484,7 +520,10 @@
 
         async function bet()
         {
+            let chips = $("#bet-input").val();
+            playerAction = {"play_option": "bet", "chips": chips};
 
+            await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
         }
 
         async function raise()
@@ -501,17 +540,14 @@
 
 <script type="module">
 
-    //console.log(1)
-    //app.setCanvas(document.getElementById("game-canvas"));
-    //document.body.appendChild(app.canvas);
-    
-    
     await PIXI.Assets.load("/images/table.png");
     
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/diamonds.png')}}")
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/hearts.png')}}")
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/spades.png')}}")
     await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/clubs.png')}}")
+    
+    await PIXI.Assets.load("{{ url_for('static', filename='images/Cards/backs.png') }}")
 
     await PIXI.Assets.load("{{ url_for('static', filename='images/Chips/chips.png') }}")
     
@@ -520,37 +556,23 @@
     diamondsSS = new PIXI.Spritesheet(PIXI.Texture.from(diamondsAtlasData.meta.image), diamondsAtlasData);
     clubsSS = new PIXI.Spritesheet(PIXI.Texture.from(clubsAtlasData.meta.image), clubsAtlasData);
     spadesSS = new PIXI.Spritesheet(PIXI.Texture.from(spadesAtlasData.meta.image), spadesAtlasData);
+    backsSS = new PIXI.Spritesheet(PIXI.Texture.from(backsAtlasData.meta.image), backsAtlasData)
 
     chipsSS = new PIXI.Spritesheet(PIXI.Texture.from(chipsAtlasData.meta.image), chipsAtlasData);
     // load the fonts
     await PIXI.Assets.load('/fonts/Helvetica.ttf');
     
-    
-    //console.log(atlasData);
-    //const handSpritesheet = new PIXI.Spritesheet(PIXI.Texture.from(handAtlasData.meta.image), handAtlasData);
+
     
     await heartsSS.parse();
     await diamondsSS.parse();
     await clubsSS.parse();
     await spadesSS.parse();
+    await backsSS.parse();
 
     await chipsSS.parse();
 
 
-    //await handSpritesheet.parse();
-    
-    //const handCard1 = new PIXI.AnimatedSprite(handSpritesheet.animations.enemy);
-    
-    // const text = new Text({
-    //                 text: playerName,
-    //                 style:{
-    //                     fontFamily: 'Helvetica'
-    //                 }
-    //                 });
-    
-    //                 text.x = loc.x;
-    //                 text.y = loc.y;
-    //                 app.stage.addChild(text);
     drawGameScreen();
 </script>
 

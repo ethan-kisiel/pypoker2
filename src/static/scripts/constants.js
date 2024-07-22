@@ -164,22 +164,22 @@ const backsAtlasData = {
 const playerLocations = [
 
     {
-        x: 60, y: 70, pos: "topLeft"
+        x: 150, y: 30, pos: "topLeft"
     },
     {
-        x: 10, y: 185, pos: "midLeft"
+        x: 10, y: 140, pos: "midLeft"
     },
     {
-        x: 60, y: 310, pos: "botLeft"
+        x: 70, y: 310, pos: "botLeft"
     },
     {
-        x: 530, y: 310, pos: "topRight"
+        x: 530, y: 310, pos: "botRight"
     },
     {
-        x: 580, y: 185, pos: "midRight"
+        x: 580, y: 140, pos: "midRight"
     },
     {
-        x: 530, y: 70, pos: "botRight"
+        x: 450, y: 30, pos: "topRight"
     },
 ]
 

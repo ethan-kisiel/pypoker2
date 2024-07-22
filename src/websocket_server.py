@@ -49,6 +49,8 @@ class SocketServer:
                         message = {"type": "room_update", 
                                    "room_data": self.room_manager.rooms[room_id].to_dict()}
                         await self.room_manager.broadcast_message(room_id, message)
+
+                        await self.room_manager.broadcast_game_update(room_id)
                         #rint(f"new user connected: {username}")
                 if message_type == "chat_message":
             
@@ -89,6 +91,9 @@ class SocketServer:
                         room.handle_player_action(username, "fold")
                     if action["play_option"] == "check":
                         room.handle_player_action(username, "check")
+ 
+                        sound_message_data = {"type": "play_sound", "sound": "check"}
+                        await self.room_manager.broadcast_message(room_id, message=sound_message_data)
                     if action["play_option"] == "raise":
                         room.handle_player_action(username, "raise", chips)
                     if action["play_option"] == "bet":
@@ -131,4 +136,3 @@ class SocketServer:
         print("LAUNCHING SERVER...")
         self.room_manager = room_manager
         asyncio.run(self.start_server())
-        

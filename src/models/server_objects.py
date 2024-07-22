@@ -40,7 +40,7 @@ class PlayAction:
     def from_dict(source: dict):
         username = source.get("username")
         play_option = PlayOption(source.get("play_option"))
-        chips = source.get(source.get("chips"))
+        chips = int(source.get("chips")) if source.get("chips") is not None else 0
         return PlayAction(username, play_option, chips)
 
 
@@ -87,14 +87,15 @@ class Player:
 
 
     def chip_bet(self, amount: int) -> int:
-        if self.chips - amount < 0:
+        if self.chips - amount <= 0:
             # TODO: raise not enough chips
-            pass
             amount = self.chips
             self.chips = 0
             self.is_all_in = True
+
         else:
             self.chips -= amount
+        
 
         self.current_bet += amount
 
@@ -113,7 +114,8 @@ class Player:
 
         try:
             player_dict["chips"] = self.chips
-            player_dict["is_folded"] = self.is_folded 
+            player_dict["is_folded"] = self.is_folded
+            player_dict["is_all_in"] = self.is_all_in
             player_dict["current_bet"] = self.current_bet
 
             player_dict["user"] = self.user.username if self.user is not None else None
@@ -123,7 +125,7 @@ class Player:
 
             elif (self.user is None
                 or self.user.username == requesting_user
-                or self.is_hand_shown):
+                or self.show_hand):
     
                 player_dict["hand"] = [card.as_dict for card in self.hand]
             else:
@@ -133,6 +135,11 @@ class Player:
             
         return player_dict
     
+
+    @property
+    def show_hand(self):
+        return self.is_all_in or self.is_hand_shown
+
     @property
     def is_playing(self):
         if None in self.hand or self.is_folded:
@@ -412,6 +419,7 @@ class Table:
                 #self.handle_bet()
                 pass
             case PlayOption.BET:
+                print(f"Chips to bet:{play_action.chips}")
                 bet = player_seat.player.chip_bet(play_action.chips)
                 self.handle_bet(bet, player_seat.player)
                 is_valid_play = True
@@ -503,7 +511,9 @@ class Table:
 
                 for seat in self.active_seats:
                     seat.player.current_bet = 0
+
                 self.pot = 0
+                self.highest_bet = 0
 
                 self.__deck = Deck()
                 self.__board = Board()
