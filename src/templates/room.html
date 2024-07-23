@@ -61,10 +61,24 @@
         <div class="row">
             <div class="col">
                 <button id="join-table" class="btn btn-primary" onclick="websocketManager.requestSeat()">Take Seat</button>
-                <button id="bet-button" class="bet btn btn-primary" onclick="bet()">Bet</button>
-                <input size="5" class="bet" id="bet-input" type="number" min="1" max="10000" value="1"></input>
+
                 <button id="check" class="btn btn-primary" onclick="check()" >Check</button>
                 <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
+
+                <div class="row">
+                    <div class="col">
+                        <button id="bet-button" class="bet btn btn-primary" onclick="bet()">Bet</button>
+                        <input size="5" class="bet" id="bet-input" type="number" min="1" max="10000" value="1"></input>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <button id="raise-button" class="raise btn btn-primary" onclick="raise()">Raise</button>
+                        <input size="5" class="raise" id="raise-input" type="number" min="1" max="10000" value="1"></input>
+                    </div>
+                </div>
+
                 <button id="call" class="btn btn-primary" onclick="call()">Call</button>
             </div>
         </div>
@@ -77,7 +91,9 @@
 
 
     <script>
+        $(".raise").hide();
         $(".bet").hide();
+
         $("#check").hide();
         $("#fold").hide();
         $("#call").hide();
@@ -188,8 +204,9 @@
                 
                 card1.x = locData.x + 100;
                 card2.x = locData.x + 122;
-                card1.y = locData.y + 100;
-                card2.y = locData.y + 100;
+
+                card1.y = locData.y + 150;
+                card2.y = locData.y + 150;
             }
             
             if (locData.pos == "topRight")
@@ -197,11 +214,61 @@
                 card1.rotation = 3.15;
                 card2.rotation = 3.15;
 
-                card1.x = locData.x + 60;
-                card2.x = locData.x + 104;
+                card1.x = locData.x + 100;
+                card2.x = locData.x + 122;
 
-                card1.y = locData.y + 200;
-                card2.y = locData.y + 200;
+                card1.y = locData.y + 150;
+                card2.y = locData.y + 150;
+            }
+
+            if (locData.pos == "midLeft")
+            {
+                card1.rotation = 2;
+                card2.rotation = 2;
+
+                card1.x = locData.x + 150;
+                card2.x = locData.x + 150;
+
+                card1.y = locData.y + 100;
+                card2.y = locData.y + 122;
+            }
+
+
+            if (locData.pos == "midRight")
+            {
+                card1.rotation = -2;
+                card2.rotation = -2;
+
+                card1.x = locData.x + 100;
+                card2.x = locData.x + 100;
+
+                card1.y = locData.y + 100;
+                card2.y = locData.y + 122;
+            }
+
+
+            if (locData.pos == "botLeft")
+            {
+                card1.rotation = .5;
+                card2.rotation = .5;
+
+                card1.x = locData.x + 120;
+                card2.x = locData.x + 142;
+
+                card1.y = locData.y + 80;
+                card2.y = locData.y + 80;
+            }
+
+            if (locData.pos == "botRight")
+            {
+                card1.rotation = -.5;
+                card2.rotation = -.5;
+
+                card1.x = locData.x + 70;
+                card2.x = locData.x + 92;
+
+                card1.y = locData.y + 80;
+                card2.y = locData.y + 80;
             }
 
                 // case "botLeft":
@@ -451,6 +518,7 @@
             }
 
             $(".bet").hide();
+            $(".raise").hide();
             $("#check").hide();
             $("#fold").hide();
             $("#call").hide();
@@ -478,6 +546,10 @@
                     if (play_option == "call")
                     {
                         $("#call").show();
+                    }
+                    if (play_option == "raise")
+                    {
+                        $(".raise").show();
                     }
                 });
             }
@@ -528,7 +600,10 @@
 
         async function raise()
         {
+            let chips = $("#raise-input").val();
+            playerAction = {"play_option": "raise", "chips": chips};
 
+            await websocketManager.sendWebsocketMessage({"type": "player_action", "room_id":room_id, "username":username, "action": playerAction});
         }
     
         websocketManager.joinRoomWithUsername();

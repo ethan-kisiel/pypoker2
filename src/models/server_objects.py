@@ -108,7 +108,7 @@ class Player:
     def recieve_chips(self, chips: int):
         self.chips += chips
 
-    def as_dict(self, requesting_user=None):
+    def as_dict(self, requesting_user=None, can_show_hand=False):
         player_dict = dict()
 
 
@@ -125,16 +125,16 @@ class Player:
 
             elif (self.user is None
                 or self.user.username == requesting_user
-                or self.show_hand):
-    
+                or (self.show_hand and can_show_hand) or self.is_hand_shown):
+
                 player_dict["hand"] = [card.as_dict for card in self.hand]
             else:
                 player_dict["hand"] = [{"face": "X", "value": "X"}, {"face": "X", "value": "X"}]
+
         except Exception as e:
             print(f"Error in player->as_dict: {e}")
-            
+
         return player_dict
-    
 
     @property
     def show_hand(self):
@@ -228,14 +228,16 @@ class Seat:
             return self.next.get_active_next(include_folded_players)
         return None
 
-    def as_dict(self, requesting_user = None):
+    def as_dict(self, requesting_user=None, can_show_hand=True):
         seat_dict = dict()
 
         seat_dict["button"] = self.button.value if self.button is not None else None
         seat_dict["is_current_turn"] = self.is_current_turn
 
         try:
-            seat_dict["player"] = self.player.as_dict(requesting_user) if self.player is not None else None
+            seat_dict["player"] = (self.player.as_dict(requesting_user, can_show_hand)
+                                   if self.player is not None else None)
+
         except Exception as e:
             print(f"Error in seat->as_dict: {e}")
         return seat_dict
@@ -443,6 +445,9 @@ class Table:
             case PlayOption.FOLD:
                 self.seats_with_actions.remove(player_seat)
                 player_seat.player.is_folded = True
+
+                player_seat.player.hand = [None, None]
+
                 is_valid_play = True
             case _:
                 pass
@@ -554,21 +559,24 @@ class Table:
 
                     if None not in user_seat.player.hand and not user_seat.player.is_folded:
                         play_options.append(PlayOption.FOLD.value)
-
-                    if player_high_bet == self.highest_bet:
-                        print(f"USER BET: {user_seat.player.current_bet}, TABLE BET: {self.highest_bet}")
-                        play_options.append(PlayOption.BET.value)
-                        play_options.append(PlayOption.CHECK.value)
-                    if player_high_bet < self.highest_bet:
-                        play_options.append(PlayOption.CALL.value)
-                        play_options.append(PlayOption.RAISE.value)
+                        if not user_seat.player.is_all_in:
+                            play_options.append(PlayOption.ALL_IN.value)
+                        if player_high_bet == self.highest_bet:
+                            print(f"USER BET: {user_seat.player.current_bet}, TABLE BET: {self.highest_bet}")
+                            play_options.append(PlayOption.BET.value)
+                            play_options.append(PlayOption.CHECK.value)
+                        if player_high_bet < self.highest_bet:
+                            play_options.append(PlayOption.CALL.value)
+                            play_options.append(PlayOption.RAISE.value)
 
 
                 table_dict["player_seat"]["play_options"] = play_options
             else:
                 table_dict["player_seat"] = None
 
-            table_dict["seats"] = [seat.as_dict() for seat in self.__seats if seat.is_empty or seat.player.user.username != user]
+            table_dict["seats"] = [seat.as_dict(can_show_hand=self.are_all_all_in) 
+                                   for seat in self.__seats if seat.is_empty
+                                   or seat.player.user.username != user]
         except Exception as e:
             print(f"Error in table->as_dict: {e}")
         return table_dict
@@ -599,6 +607,14 @@ class Table:
             if seat.player.is_folded or seat.player.is_all_in:
                 continue
             if seat.player.current_bet != self.highest_bet:
+                return False
+        return True
+
+    @property
+    def are_all_all_in(self):
+        ''' are all users at the table all in'''
+        for seat in self.active_unfolded_seats:
+            if not seat.player.is_all_in:
                 return False
         return True
     
