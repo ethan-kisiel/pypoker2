@@ -122,6 +122,10 @@ class HandScoringUtil:
                 scores.append(score)
         return scores
 
+    def score_high_card(array: list[Card]):
+        
+        return HandScoringUtil.score_simple()
+
     def score_pair(array: list[Card]):
         pair = HandScoringUtil.is_multiple(array, 2)
         if pair:
@@ -134,7 +138,7 @@ class HandScoringUtil:
         return 0
     
     def score_flush(array: list[Card]) -> int:
-        for quintet in HandScoringUtil.walk_array(array):
+        for quintet in HandScoringUtil.walk_array(array, 5):
             is_flush = HandScoringUtil.is_flush(quintet)
             if is_flush:
                 return HandScoringUtil.score_simple(is_flush, 5)
@@ -184,4 +188,32 @@ class HandScoringUtil:
             if len(array) >= 5:
                 straight_score = HandScoringUtil.is_straight(array)
                 return 1000
+        return 0
+    
+    def calculate_score(array: list[Card]):
+        rf_score = HandScoringUtil.score_royal_flush(array)
+        sf_score = HandScoringUtil.score_straight_flush(array)
+        foak_score = HandScoringUtil.score_four_oak(array)
+        fh_score = HandScoringUtil.score_full_house(array)
+        flush_score = HandScoringUtil.score_flush(array)
+        toak_score = HandScoringUtil.score_three_oak(array)
+        pair_score = HandScoringUtil.score_pair(array)
+
+
+
+        if rf_score:
+            return rf_score
+        if sf_score:
+            return sf_score
+        if foak_score:
+            return foak_score
+        if fh_score:
+            return fh_score
+        if flush_score:
+            return flush_score
+        if toak_score:
+            return toak_score
+        if pair_score:
+            return pair_score
+
         return 0

@@ -13,6 +13,8 @@ from .game_objects import Card
 from .game_objects import Board
 from .game_objects import Deck
 
+from utils.game_util import HandScoringUtil
+
 from utils.sockets_util import gen_gameid
 
 
@@ -87,19 +89,23 @@ class Player:
 
 
     def chip_bet(self, amount: int) -> int:
+        amount_bet = 0
         if self.chips - amount <= 0:
             # TODO: raise not enough chips
-            amount = self.chips
+            amount_bet = self.chips # set amount to the amount of chips that the user has
+
+            # make the user go all in
             self.chips = 0
             self.is_all_in = True
 
         else:
             self.chips -= amount
+            amount_bet = amount
         
 
-        self.current_bet += amount
+        self.current_bet += amount_bet
 
-        return amount
+        return amount_bet
 
     def recieve_hand(self, hand: list[Card]):
         self.hand = hand
@@ -500,22 +506,55 @@ class Table:
             case PhaseOfPlay.PREFLOP:
                 self.__board.draw_flop(self.__deck)
                 self.phase_of_play = PhaseOfPlay.FLOP
+                
+                if self.are_all_all_in:
+                    self.progress_phase()
 
             case PhaseOfPlay.FLOP:
                 self.__board.draw_turn(self.__deck)
                 self.phase_of_play = PhaseOfPlay.TURN
+
+                if self.are_all_all_in:
+                    self.progress_phase()
+
             case PhaseOfPlay.TURN:
                 self.__board.draw_river(self.__deck)
                 self.phase_of_play = PhaseOfPlay.RIVER
+
+                # if self.are_all_all_in:
+                #     self.progress_phase()
+
             case PhaseOfPlay.RIVER:
                 #TODO: Choose winner here
+                # seat_scores = []
+                # high_score = 0
+                # for seat in self.active_unfolded_seats:
+                #     player_cards = self.__board.cards + seat.player.hand
+                #     seat_score = (seat, HandScoringUtil.calculate_score(player_cards))
+
+                #     if seat_score > high_score:
+                #         high_score = seat_score
+                #         seat_scores = []
+                #         seat_scores.append(seat_score)
+                #     elif seat_score == high_score:
+                #         seat_scores.append(seat_score)
+
+
+                # for seat, _ in seat_scores:
+                #     seat.player.recieve_chips(int(self.pot / len(seat_scores)))
+
+
                 self.phase_of_play = PhaseOfPlay.CLEANUP
                 self.progress_phase()
             case PhaseOfPlay.CLEANUP:
                 print(f"Reached CLEANUP phase, proceeding to WAITING phase")
 
                 for seat in self.active_seats:
+                    # if seat.player.chips == 0:
+                    #     seat.eject_player()
                     seat.player.current_bet = 0
+                    seat.player.is_all_in = False
+                    seat.player.is_hand_shown = False
 
                 self.pot = 0
                 self.highest_bet = 0
@@ -562,12 +601,14 @@ class Table:
                         if not user_seat.player.is_all_in:
                             play_options.append(PlayOption.ALL_IN.value)
                         if player_high_bet == self.highest_bet:
-                            print(f"USER BET: {user_seat.player.current_bet}, TABLE BET: {self.highest_bet}")
-                            play_options.append(PlayOption.BET.value)
+                            if not user_seat.player.is_all_in:
+                                #print(f"USER BET: {user_seat.player.current_bet}, TABLE BET: {self.highest_bet}")
+                                play_options.append(PlayOption.BET.value)
                             play_options.append(PlayOption.CHECK.value)
                         if player_high_bet < self.highest_bet:
                             play_options.append(PlayOption.CALL.value)
-                            play_options.append(PlayOption.RAISE.value)
+                            if (self.highest_bet - player_high_bet) + player_high_bet < user_seat.player.chips:
+                                play_options.append(PlayOption.RAISE.value)
 
 
                 table_dict["player_seat"]["play_options"] = play_options

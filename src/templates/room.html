@@ -239,8 +239,8 @@
                 card1.rotation = -2;
                 card2.rotation = -2;
 
-                card1.x = locData.x + 100;
-                card2.x = locData.x + 100;
+                card1.x = locData.x + 60;
+                card2.x = locData.x + 60;
 
                 card1.y = locData.y + 100;
                 card2.y = locData.y + 122;
@@ -255,8 +255,8 @@
                 card1.x = locData.x + 120;
                 card2.x = locData.x + 142;
 
-                card1.y = locData.y + 80;
-                card2.y = locData.y + 80;
+                card1.y = locData.y + 100;
+                card2.y = locData.y + 100;
             }
 
             if (locData.pos == "botRight")
@@ -267,8 +267,8 @@
                 card1.x = locData.x + 70;
                 card2.x = locData.x + 92;
 
-                card1.y = locData.y + 80;
-                card2.y = locData.y + 80;
+                card1.y = locData.y + 100;
+                card2.y = locData.y + 100;
             }
 
                 // case "botLeft":
@@ -410,7 +410,7 @@
 
             for (let i = 0; i < roomData.connected_users.length; i++)
             {
-                $("#players-list").append('<li>' + roomData.connected_users[i] + "</li>");
+                $("#players-list").append(`<li id="${roomData.connected_users[i]}">` + roomData.connected_users[i] + "</li>");
             }
         }
 
@@ -430,11 +430,15 @@
             try
             {
                 let playerBet = `Your Bet: $${gameData.player_seat.player.current_bet}`;
+                let playerStack = `Your Stack: $${gameData.player_seat.player.chips}`;
+
                 let playerBetText = new PIXI.Text(playerBet, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
+                let playerStackText = new PIXI.Text(playerStack, {fontFamily : 'Helvetica', fontSize: 22, fill : 0xffffff, stroke: 0x000000}, document.getElementById("game-canvas"));
 
                 playerBetText.y = 500;
+                playerStackText.y = 540;
 
-                app.stage.addChild(playerBetText);
+                app.stage.addChild(playerBetText, playerStackText);
             } catch (exception)
             {
                 
@@ -456,7 +460,12 @@
 
                 if (gameData.seats[i].player != null)
                 {
+                    player = gameData.seats[i].player;
+
                     playerName =  gameData.seats[i].player.user;
+
+
+                    $(`#${playerName}`).text(`${playerName}  |  Stack: ${player.chips}`)
 
                     if (gameData.seats[i].is_current_turn)
                     {
@@ -646,7 +655,6 @@
     await backsSS.parse();
 
     await chipsSS.parse();
-
 
     drawGameScreen();
 </script>

@@ -200,3 +200,52 @@ class Board:
         a part of the board
         '''
         return self.__cards
+    
+
+
+class CardSlot:
+    index: int
+    card: Card
+
+    next = None
+    prev = None
+
+    def __init__(self, index: int, card: Card, next=None, prev=None):
+        self.index = index
+        self.card = card
+        
+        self.next = next
+        self.prev = prev
+
+
+class HandScorer:
+    card_slots: list[CardSlot]
+
+    def __init__(self, hand: list[Card], board: list[Card]):
+        combined_cards = hand + board
+        combined_cards.sort()
+
+
+        for i, card in enumerate(combined_cards):
+            card_slot = CardSlot(i, card)
+            self.card_slots.append(card_slot)
+
+        for i, card_slot in enumerate(self.card_slots):
+            prev = None
+            next = None
+            if i == 0:
+                prev = self.card_slots[-1]
+                next = self.card_slots[i+1]
+            elif i == len(combined_cards) - 1:
+                prev = self.card_slots[i-1]
+                next = self.card_slots[0]
+            else:
+                prev = self.card_slots[i-1]
+                next = self.card_slots[i+1]
+
+            self.card_slots[i].next = next
+            self.card_slots[i].prev = prev
+
+    @property
+    def royal_flush(self):
+        pass
