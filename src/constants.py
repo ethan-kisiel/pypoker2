@@ -40,3 +40,10 @@ class WebsocketMessageType(Enum):
     CHAT_MESSAGE = "chat_message"
     REQUEST_SEAT = "request_seat"
     PLAYER_ACTION = "player_action"
+
+
+class CardFaces(Enum):
+    CLUBS = "c"
+    DIAMONDS = "d"
+    HEARTS = "h"
+    SPADES = "s"

@@ -2,6 +2,7 @@ from random import randint as ri
 
 from constants import FACES
 from constants import VALUES
+from constants import CardFaces
 
 class Card:
     '''
@@ -203,49 +204,113 @@ class Board:
     
 
 
-class CardSlot:
-    index: int
-    card: Card
+# class CardSlot:
+#     index: int
+#     card: Card
 
-    next = None
-    prev = None
+#     next = None
+#     prev = None
 
-    def __init__(self, index: int, card: Card, next=None, prev=None):
-        self.index = index
-        self.card = card
+#     def __init__(self, index: int, card: Card, next=None, prev=None):
+#         self.index = index
+#         self.card = card
         
-        self.next = next
-        self.prev = prev
+#         self.next = next
+#         self.prev = prev
 
 
 class HandScorer:
-    card_slots: list[CardSlot]
+    cards: list[Card]
 
     def __init__(self, hand: list[Card], board: list[Card]):
         combined_cards = hand + board
         combined_cards.sort()
+        
+        self.cards = combined_cards
 
-
-        for i, card in enumerate(combined_cards):
-            card_slot = CardSlot(i, card)
-            self.card_slots.append(card_slot)
-
-        for i, card_slot in enumerate(self.card_slots):
-            prev = None
-            next = None
-            if i == 0:
-                prev = self.card_slots[-1]
-                next = self.card_slots[i+1]
-            elif i == len(combined_cards) - 1:
-                prev = self.card_slots[i-1]
-                next = self.card_slots[0]
+        self.clubs =  [card for card in self.cards if card.get_face() == CardFaces.CLUBS.value]
+        self.diamonds = [card for card in self.cards if card.get_face() == CardFaces.DIAMONDS.value]
+        self.hearts = [card for card in self.cards if card.get_face() == CardFaces.HEARTS.value]
+        self.spades = [card for card in self.cards if card.get_face() == CardFaces.SPADES.value]
+        
+        self.sets = {}
+        for card in self.cards:
+            card_val = card.get_value()
+            
+            if self.sets.get(card_val) is None:
+                self.sets[card_val] = [card]
             else:
-                prev = self.card_slots[i-1]
-                next = self.card_slots[i+1]
+                self.sets[card_val].append(card)
 
-            self.card_slots[i].next = next
-            self.card_slots[i].prev = prev
+
+    def cards_increase_by_one(self, cards: list[Card]):
+        for i, card in enumerate(cards):
+            if i == len(cards) - 1:
+                return True
+
+            if cards[i+1].get_points_value() - card.get_points_value() == 1:
+                pass
+            else:
+                return False
 
     @property
     def royal_flush(self):
         pass
+
+
+    @property
+    def flush(self):
+        '''
+        only returns the highest flush
+        '''
+        flush_cards = []
+        if len(self.clubs) >= 5:
+            start = len(self.clubs)-5
+            flush_cards = self.clubs[start:]
+
+        if len(self.diamonds) >= 5:
+            start = len(self.diamonds)-5
+            flush_cards = self.diamonds[start:]
+
+        if len(self.hearts) >= 5:
+            start = len(self.hearts)-5
+            flush_cards = self.hearts[start:]
+
+        if len(self.spades) >= 5:
+            start = len(self.spades)-5
+            flush_cards = self.spades[start:]
+
+        return flush_cards
+
+    @property
+    def straight(self):
+        straight_cards = []
+        normalized_cards = list(set(self.cards)) # get a list of only cards with different values
+        normalized_cards.sort()
+
+        if len(normalized_cards) < 5:
+            # not enough cards for there to be a straight
+            return straight_cards
+
+        start = len(normalized_cards) - 5
+
+        while start >= 0:
+            stop = start+5
+
+            if stop < len(normalized_cards):
+                cards_to_search = normalized_cards[start:stop]
+            else:
+                cards_to_search = normalized_cards[start:]
+
+            if self.cards_increase_by_one(cards_to_search):
+                return cards_to_search
+
+            start -= 1
+        else:
+            # check for 5 high straight
+            if (self.cards_increase_by_one(normalized_cards[0:4]) 
+                and normalized_cards[-1].get_points_value() == 13):
+                straight_cards.append(normalized_cards[-1])
+                straight_cards += normalized_cards[0:4]
+        
+        return straight_cards
