@@ -242,6 +242,8 @@ class HandScorer:
             else:
                 self.sets[card_val].append(card)
 
+        self.straights = self.get_straights() #straights from highest to lowest
+
 
     def cards_increase_by_one(self, cards: list[Card]):
         for i, card in enumerate(cards):
@@ -257,12 +259,24 @@ class HandScorer:
     def royal_flush(self):
         pass
 
-
     @property
     def flush(self):
+        if len(self.clubs)>=5:
+            return self.clubs
+        if len(self.diamonds)>=5:
+            return self.diamonds
+        if len(self.hearts)>=5:
+            return self.hearts
+        if len(self.spades) >=5:
+            return self.spades
+        return []
+
+    @property
+    def high_flush(self):
         '''
         only returns the highest flush
         '''
+        
         flush_cards = []
         if len(self.clubs) >= 5:
             start = len(self.clubs)-5
@@ -282,15 +296,16 @@ class HandScorer:
 
         return flush_cards
 
-    @property
-    def straight(self):
-        straight_cards = []
+
+    def get_straights(self):
+        straights = []
+
         normalized_cards = list(set(self.cards)) # get a list of only cards with different values
         normalized_cards.sort()
 
         if len(normalized_cards) < 5:
             # not enough cards for there to be a straight
-            return straight_cards
+            return straights
 
         start = len(normalized_cards) - 5
 
@@ -303,14 +318,90 @@ class HandScorer:
                 cards_to_search = normalized_cards[start:]
 
             if self.cards_increase_by_one(cards_to_search):
-                return cards_to_search
+                straights.append(cards_to_search)
 
             start -= 1
         else:
             # check for 5 high straight
             if (self.cards_increase_by_one(normalized_cards[0:4]) 
                 and normalized_cards[-1].get_points_value() == 13):
+                straight_cards = []
                 straight_cards.append(normalized_cards[-1])
                 straight_cards += normalized_cards[0:4]
+                straights.append(straight_cards)
+
+        return straights
+
+
+
+
+    @property
+    def score(self):
+        # royal flush
+        if len(self.straights) >= 1:
+            high_straight = self.straights[0]
+            high_straight_score = high_straight[-1].get_points_value()
+            if high_straight_score == 13:
+                flush_overlap = [card for card in high_straight if card in self.flush]
+                if len(flush_overlap) == len(high_straight):
+                    return 100000
         
-        return straight_cards
+        # straight flush
+        for straight in self.straights:
+            flush_overlap = [card for card in straight if card in self.flush]
+            if len(flush_overlap) == len(straight):
+                return 90000 + straight[-1].get_points_value() * 100
+
+        # four of a kind
+        for k,v in self.sets.items().__reversed__():
+            if len(v) == 4:
+                return 80000 + v[-1].get_points_value() * 100
+        
+        # full house
+        base = 0
+        roof = 0
+        for k,v in self.sets.items().__reversed__():
+
+            if len(v) == 3 and base == 0:
+                base = v[0].get_points_value() * 100
+            if len(v) == 2 and roof == 0:
+                roof = v[0].get_points_value()
+            
+            if base != 0 and roof != 0:
+                return 70000 + base + roof
+            
+
+        # flush
+        if len(self.high_flush) == 5:
+            return 60000 + self.high_flush[-1].get_points_value() * 100
+
+        # straight
+        if len(self.straights) >= 1:
+            return 50000 + self.straights[0][-1].get_points_value() * 100
+
+        # three of a kind
+        for k,v in self.sets.items().__reversed__():
+            if len(v) == 3:
+                return 40000 + v[-1].get_points_value() * 100
+            
+        #two pair
+        pair_one = 0
+        pair_two = 0
+        for k,v in self.sets.items().__reversed__():
+
+            if len(v) == 2 and pair_one == 0:
+                pair_one = v[0].get_points_value() * 100
+            if len(v) == 2 and pair_two == 0:
+                pair_one = v[0].get_points_value()
+            
+            if pair_one != 0 and pair_two != 0:
+                return 30000 + pair_one + pair_two
+        
+        # pair
+        for k,v in self.sets.items().__reversed__():
+            if len(v) == 2:
+                return 20000 + v[-1].get_points_value() * 100
+        
+        # high card
+        return 10000 + self.cards[-1].get_points_value() * 100
+

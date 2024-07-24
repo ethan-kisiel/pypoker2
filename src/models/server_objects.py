@@ -12,8 +12,7 @@ from constants import PlayOption
 from .game_objects import Card
 from .game_objects import Board
 from .game_objects import Deck
-
-from utils.game_util import HandScoringUtil
+from .game_objects import HandScorer
 
 from utils.sockets_util import gen_gameid
 
@@ -526,22 +525,26 @@ class Table:
 
             case PhaseOfPlay.RIVER:
                 #TODO: Choose winner here
-                # seat_scores = []
-                # high_score = 0
-                # for seat in self.active_unfolded_seats:
-                #     player_cards = self.__board.cards + seat.player.hand
-                #     seat_score = (seat, HandScoringUtil.calculate_score(player_cards))
 
-                #     if seat_score > high_score:
-                #         high_score = seat_score
-                #         seat_scores = []
-                #         seat_scores.append(seat_score)
-                #     elif seat_score == high_score:
-                #         seat_scores.append(seat_score)
+                try:
+                    seat_scores = []
+                    high_score = 0
+                    for seat in self.active_unfolded_seats:
+                        player_cards = self.__board.cards + seat.player.hand
+                        seat_score = (seat, HandScorer(seat.player.hand, self.__board.cards).score)
+
+                        if seat_score[1] > high_score:
+                            high_score = seat_score[1]
+                            seat_scores = []
+                            seat_scores.append(seat_score)
+                        elif seat_score[1] == high_score:
+                            seat_scores.append(seat_score)
 
 
-                # for seat, _ in seat_scores:
-                #     seat.player.recieve_chips(int(self.pot / len(seat_scores)))
+                    for seat, _ in seat_scores:
+                        seat.player.recieve_chips(int(self.pot / len(seat_scores)))
+                except Exception as e:
+                    print(f"EXCEPTION in Table->progress_phase(): {e}")
 
 
                 self.phase_of_play = PhaseOfPlay.CLEANUP
