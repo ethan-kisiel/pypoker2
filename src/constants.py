@@ -47,3 +47,13 @@ class CardFaces(Enum):
     DIAMONDS = "d"
     HEARTS = "h"
     SPADES = "s"
+
+    def get_unicode(face):
+        if face == CardFaces.CLUBS:
+            return "♣"
+        if face == CardFaces.DIAMONDS:
+            return "♦"
+        if face == CardFaces.HEARTS:
+            return "♥"
+        if face == CardFaces.SPADES:
+            return "♠"

@@ -86,22 +86,32 @@ class SocketServer:
                     chips = action.get("chips")
 
                     room = self.room_manager.rooms[room_id]
+                    
+
+                    action_result = None
 
                     if action["play_option"] == "fold":
-                        room.handle_player_action(username, "fold")
+                        action_result = room.handle_player_action(username, "fold")
                     if action["play_option"] == "check":
-                        room.handle_player_action(username, "check")
+                        action_result = room.handle_player_action(username, "check")
  
                         sound_message_data = {"type": "play_sound", "sound": "check"}
                         await self.room_manager.broadcast_message(room_id, message=sound_message_data)
                     if action["play_option"] == "raise":
-                        room.handle_player_action(username, "raise", chips)
+                        action_result = room.handle_player_action(username, "raise", chips)
                     if action["play_option"] == "bet":
-                        room.handle_player_action(username, "bet", chips)
+                        action_result = room.handle_player_action(username, "bet", chips)
                     if action["play_option"] == "call":
-                        room.handle_player_action(username, "call")
+                        action_result = room.handle_player_action(username, "call")
 
                     await self.room_manager.broadcast_game_update(room_id)
+
+                    if action_result is not None:
+                        for seat_score in action_result:
+                            message = f"{seat_score[0].player.user.username} won with: {",".join([card.unicode for card in seat_score[1][1]])}"
+                            data = {"type": "chat_message", "username": "Server", "message": message}
+                            await self.room_manager.broadcast_message(room_id, data)
+
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)
                 # message = {"type": "room_update", 

@@ -462,14 +462,14 @@ class Table:
             player_seat.get_active_next(False).is_current_turn = True
 
             if len(self.active_unfolded_seats) <= 1:
-                player_seat.player.chips += self.pot
+                self.active_unfolded_seats[0].player.chips += self.pot
                 self.phase_of_play = PhaseOfPlay.CLEANUP
-                self.progress_phase()
+                return self.progress_phase()
 
             if set(self.seats_with_actions) == set(self.active_unfolded_seats):
                 if self.are_bets_equal:
                     self.seats_with_actions = []
-                    self.progress_phase()
+                    return self.progress_phase()
                 else:
                     self.seats_with_actions = []
             # if win condition??
@@ -531,24 +531,28 @@ class Table:
                     high_score = 0
                     for seat in self.active_unfolded_seats:
                         player_cards = self.__board.cards + seat.player.hand
-                        seat_score = (seat, HandScorer(seat.player.hand, self.__board.cards).score)
+                        hand_scorer = HandScorer(seat.player.hand, self.__board.cards)
+                        seat_score = (seat, hand_scorer.score)
 
-                        if seat_score[1] > high_score:
-                            high_score = seat_score[1]
+                        if seat_score[1][0] > high_score:
+                            high_score = seat_score[1][0]
                             seat_scores = []
                             seat_scores.append(seat_score)
-                        elif seat_score[1] == high_score:
+                        elif seat_score[1][0] == high_score:
                             seat_scores.append(seat_score)
 
 
                     for seat, _ in seat_scores:
                         seat.player.recieve_chips(int(self.pot / len(seat_scores)))
+                    
                 except Exception as e:
                     print(f"EXCEPTION in Table->progress_phase(): {e}")
 
 
                 self.phase_of_play = PhaseOfPlay.CLEANUP
                 self.progress_phase()
+
+                return seat_scores
             case PhaseOfPlay.CLEANUP:
                 print(f"Reached CLEANUP phase, proceeding to WAITING phase")
 
@@ -754,7 +758,7 @@ class Room:
         play_action_dict = {"username": username, "play_option": play_option, "chips": chips}
         play_action = PlayAction.from_dict(play_action_dict)
 
-        self.__table.process_action(play_action)
+        return self.__table.process_action(play_action)
 
 
     @property
