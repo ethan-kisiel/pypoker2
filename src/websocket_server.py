@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 
 from websockets import serve
 
@@ -48,6 +49,7 @@ class SocketServer:
 
                         message = {"type": "room_update", 
                                    "room_data": self.room_manager.rooms[room_id].to_dict()}
+
                         await self.room_manager.broadcast_message(room_id, message)
 
                         await self.room_manager.broadcast_game_update(room_id)
@@ -97,20 +99,59 @@ class SocketServer:
  
                         sound_message_data = {"type": "play_sound", "sound": "check"}
                         await self.room_manager.broadcast_message(room_id, message=sound_message_data)
+
+                    
                     if action["play_option"] == "raise":
                         action_result = room.handle_player_action(username, "raise", chips)
+
+                        sound_message_data = {"type": "play_sound", "sound": "bet"}
+                        await self.room_manager.broadcast_message(room_id, message=sound_message_data)
+
                     if action["play_option"] == "bet":
                         action_result = room.handle_player_action(username, "bet", chips)
+                        
+                        sound_message_data = {"type": "play_sound", "sound": "bet"}
+                        await self.room_manager.broadcast_message(room_id, message=sound_message_data)
                     if action["play_option"] == "call":
                         action_result = room.handle_player_action(username, "call")
+                        
+                        sound_message_data = {"type": "play_sound", "sound": "bet"}
+                        await self.room_manager.broadcast_message(room_id, message=sound_message_data)
 
                     await self.room_manager.broadcast_game_update(room_id)
 
-                    if action_result is not None:
-                        for seat_score in action_result:
-                            message = f"{seat_score[0].player.user.username} won with: {",".join([card.unicode for card in seat_score[1][1]])}"
-                            data = {"type": "chat_message", "username": "Server", "message": message}
+                    for action in action_result:
+                        message = ""
+                        match action["type"]:
+                            case "win":
+                                for seat, (score, hand) in action["phase_result"]:
+
+                                    message = f"{seat.player.user.username} won with: {",".join([card.unicode for card in hand])}"
+
+
+                                    data = {"type": "chat_message", "username": "Server", "message": message, "quiet": False}
+                                    await self.room_manager.broadcast_message(room_id, data)
+
+                                    await asyncio.sleep(5)
+                                    print("hello world")
+                                    room.go_to_cleanup()
+                                    await self.room_manager.broadcast_game_update(room_id)
+
+                            case "check":
+                                message = f"{action['user']} checked."
+                            case "raise":
+                                message = f"{action['user']} raised {action['amount']}."
+                            case "bet":
+                                message = f"{action['user']} bet {action['amount']}."
+                            case "call":
+                                message = f"{action['user']} called {action['amount']}."
+                            case "fold":
+                                message = f"{action['user']} folded."
+                        
+                        if action["type"] != "win":
+                            data = {"type": "chat_message", "username": "Server", "message": message, "quiet": True}
                             await self.room_manager.broadcast_message(room_id, data)
+
 
             except ConnectionClosedError:
                 await self.room_manager.kick_user(websocket)
@@ -127,6 +168,7 @@ class SocketServer:
             except Exception as e:
                 await self.room_manager.kick_user(websocket)
                 print(f"EXCEPTION RAISED: {e}")
+                traceback.print_exc()
                 pass
 
 

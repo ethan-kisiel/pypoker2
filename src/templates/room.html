@@ -1,6 +1,10 @@
 {% extends "base.html" %}
     {% block content %}
-    
+    <style>
+        .quiet {
+            color: #707070
+        }
+    </style>
     <script src="{{ url_for('static', filename='scripts/websocket_manager.js')}}">
     </script>
 
@@ -21,6 +25,15 @@
         let backsSS;
 
         let chipsSS;
+
+        window.onload = () =>{ 
+            $("[type='number']").keypress(function (evt) {
+                evt.preventDefault();
+            });
+            $("[type='number']").input(function (evt) {
+                evt.preventDefault();
+            });
+        }
 
     </script>
 
@@ -65,11 +78,12 @@
                 <button id="fold" class="btn btn-primary" onclick="fold()">Fold</button>
                 <button id="check" class="btn btn-primary" onclick="check()" >Check</button>
 
-                <input size="5" class="bet" id="bet-input" type="number" min="1" max="10000" value="1"></input>
-                <button id="bet-button" class="bet btn btn-primary" onclick="bet()">Bet</button>
 
-                <input size="5" class="raise" id="raise-input" type="number" min="1" max="10000" value="1"></input>
+                <button id="bet-button" class="bet btn btn-primary" onclick="bet()">Bet</button>
+                <input size="5" class="bet" step="25" id="bet-input" type="number" min="25" max="10000" value="25"></input>
+
                 <button id="raise-button" class="raise btn btn-primary" onclick="raise()">Raise</button>
+                <input size="5" class="raise" step="25" id="raise-input" type="number" min="25" max="10000" value="25"></input>
 
                 <button id="call" class="btn btn-primary" onclick="call()">Call</button>
             </div>
@@ -115,6 +129,7 @@
 
         var notificationAudio = new Audio("{{ url_for('static', filename='sfx/notification.mp3')}}");
         var checkAudio = new Audio("{{ url_for('static', filename='sfx/check.mp3')}}")
+        var betAudio = new Audio("{{ url_for('static', filename='sfx/bet_sound.mp3') }}")
 
         function getAnimationForFace(face)
         {
@@ -375,12 +390,20 @@
         }
         }
 
-        function addToChatBox(message)
+        function addToChatBox(message, quiet=false)
         {
-            $("#chat-box").append("<p>" + message + "</p>");
-            let bottomElement = $("chat-box").children[-1];
+            if (quiet)
+            {
+                $("#chat-box").append("<p class='quiet'>" + message + "</p>");
+            }
+            else
+            {
+                $("#chat-box").append("<p>" + message + "</p>");
             
-            notificationAudio.play();
+                notificationAudio.play();
+            }
+
+            let bottomElement = $("chat-box").children[-1];
             $("#chat-box").animate({scrollTop: 50000}, 500);
             //$("#chat-box").scrollTop($("chat-box")[0].scrollHeight - $("chat-box")[0].clientHeight);
             //$("#chat-box").scroll()
@@ -392,6 +415,10 @@
             if (sound == "check")
             {
                 checkAudio.play();
+            }
+            if (sound == "bet")
+            {
+                betAudio.play();
             }
         }
 
@@ -554,8 +581,6 @@
                     }
                 });
             }
-
-            //gameData.
         }
 
         let websocketManager = new WebsocketManager("10.1.77.242", "4201", addToChatBox, updatePlayers, gameUpdate, playSound);

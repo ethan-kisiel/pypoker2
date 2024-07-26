@@ -41,7 +41,7 @@ class PlayAction:
     def from_dict(source: dict):
         username = source.get("username")
         play_option = PlayOption(source.get("play_option"))
-        chips = int(source.get("chips")) if source.get("chips") is not None else 0
+        chips = int(source.get("chips")) if source.get("chips") is not None and source.get("chips") != "" else 0
         return PlayAction(username, play_option, chips)
 
 
@@ -421,6 +421,7 @@ class Table:
 
         self.seats_with_actions.append(player_seat)
 
+        actions = []
         match play_action.play_option:
             case PlayOption.ALL_IN:
                 #self.handle_bet()
@@ -430,6 +431,10 @@ class Table:
                 bet = player_seat.player.chip_bet(play_action.chips)
                 self.handle_bet(bet, player_seat.player)
                 is_valid_play = True
+
+                action = {"type": "bet", "amount": bet, "user": player_seat.player.user.username}
+                actions.append(action)
+    
             case PlayOption.RAISE:
                 bet_difference = self.highest_bet - player_seat.player.current_bet
                 bet_amount = play_action.chips + bet_difference
@@ -437,6 +442,10 @@ class Table:
                 bet = player_seat.player.chip_bet(bet_amount)
                 self.handle_bet(bet, player_seat.player)
                 is_valid_play = True
+
+                action = {"type": "raise", "amount": bet, "user": player_seat.player.user.username}
+                actions.append(action)
+
             case PlayOption.CALL:
                 bet_difference = self.highest_bet - player_seat.player.current_bet
                 bet = player_seat.player.chip_bet(bet_difference)
@@ -444,9 +453,15 @@ class Table:
                 self.handle_bet(bet, player_seat.player)
 
                 is_valid_play = True
+
+                action = {"type": "call", "amount": bet, "user": player_seat.player.user.username}
+                actions.append(action)
             case PlayOption.CHECK:
                 if player_seat.player.current_bet == self.highest_bet:
                     is_valid_play = True
+
+                    action = {"type": "check", "user": player_seat.player.user.username}
+                    actions.append(action)
             case PlayOption.FOLD:
                 self.seats_with_actions.remove(player_seat)
                 player_seat.player.is_folded = True
@@ -454,6 +469,9 @@ class Table:
                 player_seat.player.hand = [None, None]
 
                 is_valid_play = True
+                
+                action = {"type": "fold", "user": player_seat.player.user.username}
+                actions.append(action)
             case _:
                 pass
 
@@ -462,16 +480,25 @@ class Table:
             player_seat.get_active_next(False).is_current_turn = True
 
             if len(self.active_unfolded_seats) <= 1:
-                self.active_unfolded_seats[0].player.chips += self.pot
+                winning_player = self.active_unfolded_seats[0].player
+                winning_player.chips += self.pot
                 self.phase_of_play = PhaseOfPlay.CLEANUP
-                return self.progress_phase()
+
+                self.progress_phase()
+                action = {"type": "fold_win", "user": winning_player.user.username}
+                actions.append(action)
 
             if set(self.seats_with_actions) == set(self.active_unfolded_seats):
                 if self.are_bets_equal:
                     self.seats_with_actions = []
-                    return self.progress_phase()
+                    phase_result =  self.progress_phase()
+                    if phase_result is not None:
+                        action = {"type": "win", "phase_result": phase_result}
+                        actions.append(action)
                 else:
                     self.seats_with_actions = []
+
+        return actions
             # if win condition??
 
     def progress_phase(self):
@@ -548,9 +575,8 @@ class Table:
                 except Exception as e:
                     print(f"EXCEPTION in Table->progress_phase(): {e}")
 
-
-                self.phase_of_play = PhaseOfPlay.CLEANUP
-                self.progress_phase()
+                for seat in self.active_unfolded_seats:
+                    seat.player.is_hand_shown = True
 
                 return seat_scores
             case PhaseOfPlay.CLEANUP:
@@ -605,14 +631,16 @@ class Table:
 
                     if None not in user_seat.player.hand and not user_seat.player.is_folded:
                         play_options.append(PlayOption.FOLD.value)
+
                         if not user_seat.player.is_all_in:
                             play_options.append(PlayOption.ALL_IN.value)
-                        if player_high_bet == self.highest_bet:
+                        
+                        if player_high_bet == self.highest_bet or user_seat.player.is_all_in:
                             if not user_seat.player.is_all_in:
-                                #print(f"USER BET: {user_seat.player.current_bet}, TABLE BET: {self.highest_bet}")
                                 play_options.append(PlayOption.BET.value)
                             play_options.append(PlayOption.CHECK.value)
-                        if player_high_bet < self.highest_bet:
+                        
+                        if player_high_bet < self.highest_bet and user_seat.player.chips > 0:
                             play_options.append(PlayOption.CALL.value)
                             if (self.highest_bet - player_high_bet) + player_high_bet < user_seat.player.chips:
                                 play_options.append(PlayOption.RAISE.value)
@@ -760,6 +788,9 @@ class Room:
 
         return self.__table.process_action(play_action)
 
+    def go_to_cleanup(self):
+        self.__table.phase_of_play = PhaseOfPlay.CLEANUP
+        self.__table.progress_phase()
 
     @property
     def capacity(self):

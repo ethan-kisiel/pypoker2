@@ -25,7 +25,7 @@ class WebsocketManager
         if (event.type ==  "player_joined")
             {
                 console.log("Player Joined" + " with name" + event.username);
-                addToChatBox("Player joined: " + event.username);
+                addToChatBox("Player joined: " + event.username, true);
                 
                 //$("#chat-box").append("<p>Player joined: " + event.username+"</p>");
     
@@ -61,7 +61,8 @@ class WebsocketManager
     
             if (event.type == "chat_message")
             {
-                this.chatMessageCallback(event.username + ": " + event.message);
+                let isQuiet = event.quiet == null? false : event.quiet;
+                this.chatMessageCallback(event.username + ": " + event.message, isQuiet);
             }
 
             if (event.type == "play_sound")
